@@ -95,6 +95,18 @@ if __name__ == "__main__":
                 "site_snow_accumulation": pl.Float64,
             }
         )
+        
+        # Fix channels:
+        # Override channels all only if channels_in and channels_out are not null, else:
+        # Some cities only implement channels_unknown and leave the others empty, in this case, put the data into channels_all
+        df = df.with_columns([
+            pl.when(
+                (pl.col("channels_in").is_not_null()) & (pl.col("channels_out").is_not_null())
+            )
+            .then(pl.col("channels_in") + pl.col("channels_out"))
+            .otherwise(pl.col("channels_unknown"))
+            .alias("channels_all")
+        ])
 
         # go through all unique city and station combinations
         for (city, station), group in df.group_by([CITY_INDEX, STATION_INDEX]):
