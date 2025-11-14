@@ -4,3 +4,6 @@ https://unfallatlas.statistikportal.de/
 Fahrraddaten Map:
 https://mobidata-bw.de/dataset/eco-counter-fahrradzahler
 
+Openstreet Map:
+Contains type of road, speed limit, light situation, etc,
+https://www.openstreetmap.org/#map=14/49.40422/8.66435&layers=C 
