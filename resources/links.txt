@@ -7,3 +7,9 @@ https://mobidata-bw.de/dataset/eco-counter-fahrradzahler
 Openstreet Map:
 Contains type of road, speed limit, light situation, etc,
 https://www.openstreetmap.org/#map=14/49.40422/8.66435&layers=C 
+
+Weather Data (Open-Meteo):
+Historical weather data API (free, no API key required)
+https://open-meteo.com/en/docs/historical-weather-api
+Heidelberg coordinates: 49.4093°N, 8.6942°E
+ 
