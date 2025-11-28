@@ -14,9 +14,7 @@ uv pip install -e .
 
 When using Visual Studio Code, change the configuration `jupyter.notebookFileRoot` to `"${workspaceFolder}"`.
 
-## Download data
-To fetch data, run:
-
+# Fetch Data
 ### Bicycle Counter Data
 ```zsh
 python datalit/fetch/fetch_cycle_data.py
@@ -40,5 +38,5 @@ This downloads historical weather data for Heidelberg (2013-2025) from the Open-
 
 The data is automatically processed and combined into a single dataset with daily aggregates for easier analysis.
 
-## Helpful ressources
+# Resources
 Check out the ``resources`` folder.
