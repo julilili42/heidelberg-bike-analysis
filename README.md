@@ -2,34 +2,33 @@
 
 ## Setup python
 If you use python, this is pretty straightforward, run:
-```bash
+```zsh
 uv sync
 ```
 in the project directory. This generates the python environment and downloads all dependencies. Otherwise install them manually, all of them are listed in `pyproject.toml`.
 
 Then install the core utilities:
-```
+```zsh
 uv pip install -e .
 ```
 
-When using Visual Studio Code: Set base path for jupyter notebooks:
-```"jupyter.notebookFileRoot": "${workspaceFolder}"```
+When using Visual Studio Code, change the configuration `jupyter.notebookFileRoot` to `"${workspaceFolder}"`.
 
 ## Download data
 To fetch data, run:
 
 ### Bicycle Counter Data
-```bash
+```zsh
 python datalit/fetch/fetch_cycle_data.py
 ```
 
 ### Accident Data
-```bash
+```zsh
 python datalit/fetch/fetch_accident_data.py
 ```
 
 ### Weather Data
-```bash
+```zsh
 python datalit/fetch/fetch_weather_data.py
 ```
 
