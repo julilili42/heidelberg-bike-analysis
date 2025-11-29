@@ -12,8 +12,6 @@ Then install the core utilities:
 uv pip install -e .
 ```
 
-When using Visual Studio Code, change the configuration `jupyter.notebookFileRoot` to `"${workspaceFolder}"`.
-
 # Fetch Data
 ### Bicycle Counter Data
 ```zsh
