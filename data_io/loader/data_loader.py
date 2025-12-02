@@ -45,7 +45,7 @@ class DataLoader:
 
             if df.schema["datetime"] == pl.String:
                 df = df.with_columns(
-                    pl.col("datetime").str.strptime(pl.Datetime, strict=False)
+                    pl.col("datetime").str.strptime(pl.Datetime, strict=False).dt.replace_time_zone("UTC")
                 )
 
             dfs.append(df)
@@ -57,6 +57,13 @@ class DataLoader:
 
     def get_weather(self, interval=None, sample_rate=None):
         wd = self.weather_data
+
+        # datetime already includes all of this information
+        wd = wd.drop([
+            "timestamp","year","month","day","hour","weekday",
+            "day_of_year"
+        ])
+
         if interval:
             wd = wd.interval(interval[0], interval[1])
         if sample_rate:
@@ -67,6 +74,20 @@ class DataLoader:
     def get_weather_pandas(self, interval=None, sample_rate=None):
         df = self.get_weather(interval, sample_rate)
         return df.to_pandas()
+    
+
+    def get_bicycle_with_weather(self, station_name, interval=None, sample_rate="1h"):
+        """
+        Returns a combined bicycle + weather data joined on datetime.
+        Join based on weather data, since it is more comprehensive. 
+        """
+        bike = self.get_bicycle(station_name, interval=interval, sample_rate=sample_rate).df
+
+        weather = self.get_weather(interval=interval, sample_rate=sample_rate).df
+
+        merged = weather.join(bike, on="datetime", how="left")
+
+        return merged
     
 
     def _load_bicycle(self):
