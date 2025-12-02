@@ -218,3 +218,6 @@ __marimo__/
 data/
 
 uv.lock
+
+# macOS
+.DS_Store
