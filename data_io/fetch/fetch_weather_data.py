@@ -4,21 +4,27 @@ from pathlib import Path
 import argparse
 from tqdm import tqdm
 import polars as pl
-from datetime import datetime
+from datetime import date, timedelta
 import time
 
 
-def fetch_weather_data_for_year(year: int, latitude: float = 49.4093, longitude: float = 8.6942) -> pl.DataFrame:
-    start_date = f"{year}-01-01"
-    end_date = f"{year}-12-31"
+def fetch_weather_data_for_year(year: int, start_month: int = 1, end_month: int = 12, start_day = 1, end_day = 31, latitude: float = 49.4093, longitude: float = 8.6942) -> pl.DataFrame:
+
+    start_date = date(year, start_month, start_day)
+    try:
+        end_date = date(year, end_month, end_day)
+    except ValueError:
+        next_month = end_month % 12 + 1
+        next_year = year + (end_month // 12)
+        end_date = date(next_year, next_month, 1) - timedelta(days=1)
 
     url = "https://archive-api.open-meteo.com/v1/archive"
 
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "start_date": start_date,
-        "end_date": end_date,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
         "hourly": [
             "temperature_2m",
             "relative_humidity_2m",
