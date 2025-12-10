@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import os
 
+
 # Fetches public holidays and schulferien
 def fetch_holidays(start_year, end_year, output_dir):
     base_url = "https://www.mehr-schulferien.de/api/v2.1/federal-states/baden-wuerttemberg/periods"
@@ -39,6 +40,58 @@ def fetch_holidays(start_year, end_year, output_dir):
             "is_school_vacation": item.get("is_school_vacation"),
         }
         holidays.append(holiday)
+
+    # Fastnachtsferien
+    manual_vacations = [
+        {
+            "name": "Fastnachtsferien",
+            "start_date": "2020-02-24",
+            "end_date": "2020-02-28",
+        },
+        {
+            "name": "Fastnachtsferien",
+            "start_date": "2021-02-15",
+            "end_date": "2021-02-19",
+        },
+        {
+            "name": "Fastnachtsferien",
+            "start_date": "2022-02-28",
+            "end_date": "2022-03-04",
+        },
+        {
+            "name": "Fastnachtsferien",
+            "start_date": "2023-02-20",
+            "end_date": "2023-02-24",
+        },
+        {
+            "name": "Fastnachtsferien",
+            "start_date": "2024-02-12",
+            "end_date": "2024-02-18",
+        },
+        {
+            "name": "Fastnachtsferien",
+            "start_date": "2025-03-03",
+            "end_date": "2025-03-09",
+        },
+        {
+            "name": "Fastnachtsferien",
+            "start_date": "2026-02-16",
+            "end_date": "2026-02-22",
+        },
+    ]
+
+    for vacation in manual_vacations:
+        holidays.append(
+            {
+                "id": f"manual_fastnacht_{vacation['start_date'][:4]}",
+                "name": vacation["name"],
+                "type": "school_vacation",
+                "start_date": vacation["start_date"],
+                "end_date": vacation["end_date"],
+                "is_public_holiday": False,
+                "is_school_vacation": True,
+            }
+        )
 
     df = pd.DataFrame(holidays)
 

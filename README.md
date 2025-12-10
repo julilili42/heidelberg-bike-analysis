@@ -13,25 +13,15 @@ uv pip install -e .
 ```
 
 # Fetch Data
-### Bicycle Counter Data
-```zsh
-python data_io/fetch/fetch_cycle_data.py
-```
-
-### Accident Data
-```zsh
-python data_io/fetch/fetch_accident_data.py
-```
-
-### Weather Data
-```zsh
-python data_io/fetch/fetch_weather_data.py
-```
-
-### All Data
 ```zsh
 python data_io/fetch/fetch_all.py
 ```
+
+This will fetch:
+- cycle count
+- accident data
+- weather
+- holidays
 
 This downloads historical weather data for Heidelberg (2013-2025) from the Open-Meteo API, including:
 - Temperature, humidity, precipitation
