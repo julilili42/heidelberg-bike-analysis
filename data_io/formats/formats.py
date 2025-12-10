@@ -66,6 +66,15 @@ ACCIDENT_FORMAT = {
     "LINREFX": pl.Float64,
     "LINREFY": pl.Float64,
     "latitude": pl.Float64,
-    "longitude": pl.Float64
+    "longitude": pl.Float64,
 }
 
+HOLIDAYS_FORMAT = {
+    "id": pl.Int32,
+    "name": pl.String,
+    "type": pl.String,
+    "start_date": pl.String,
+    "end_date": pl.String,
+    "is_public_holiday": pl.Boolean,
+    "is_school_vacation": pl.Boolean
+}

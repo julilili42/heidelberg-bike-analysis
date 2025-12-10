@@ -5,6 +5,7 @@ scripts = [
     "data_io/fetch/fetch_accident_data.py",
     "data_io/fetch/fetch_cycle_data.py",
     "data_io/fetch/fetch_weather_data.py",
+    "data_io/fetch/fetch_holidays.py",
 ]
 
 for script in scripts:
