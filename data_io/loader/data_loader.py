@@ -270,5 +270,9 @@ loader = DataLoader()
 # print(loader.get_bicycle("Mannheimer Straße", interval=("2022-01-01", "2023-01-01"), sample_rate="1y"))
 # print(loader.get_bicycle_location("Mannheimer Straße"))
 
+# intervall parameter is always given in the format interval = ("2022-01-01", "2023-01-01")
+
 # print(loader.get_public_holiday("2023-10-03"))
 # print(loader.get_school_holidays("2023-08-01", "2023-08-22"))
+
+
