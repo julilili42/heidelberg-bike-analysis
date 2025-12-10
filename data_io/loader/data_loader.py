@@ -227,7 +227,7 @@ class DataLoader:
 
         # We only load: 'schulferien_holidays_bw'
         for file in files:
-            print("Ja", file)
+            #print("Ja", file)
             if file.startswith("schulferien_holidays_bw"):
                 path = os.path.join(self.holidays_folder, file)
                 df = pl.read_csv(path, schema=HOLIDAYS_FORMAT).drop(["id", "type"])
