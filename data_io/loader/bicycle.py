@@ -28,3 +28,26 @@ class BicycleData(BaseData):
     def drop(self, columns: list[str]):
         df = self.df.drop(columns)
         return BicycleData(df, self.station)
+    
+
+    def filter_time(
+        self,
+        weekday = None,   # True=Mo–Fr, False=Sa–So
+        time_frame = (0, 24)
+    ):
+        df = self.df
+        hour_min, hour_max = time_frame
+
+        if weekday is not None:
+            if weekday:
+                df = df.filter(pl.col("datetime").dt.weekday() < 5)
+            else:
+                df = df.filter(pl.col("datetime").dt.weekday() >= 5)
+
+        df = df.filter(
+            (pl.col("datetime").dt.hour() >= hour_min) &
+            (pl.col("datetime").dt.hour() < hour_max)
+        )
+
+        return self.new(df)
+    
