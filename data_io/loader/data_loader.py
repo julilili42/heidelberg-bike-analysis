@@ -264,7 +264,7 @@ class DataLoader:
 
 
 # Example usage:
-loader = DataLoader()
+# loader = DataLoader()
 
 # print(loader.get_bicyle_stations())
 # print(loader.get_bicycle("Mannheimer Straße", interval=("2022-01-01", "2023-01-01"), sample_rate="1y"))

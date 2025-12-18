@@ -8,7 +8,7 @@ WEATHER_FORMAT = {
     "precipitation": pl.Float64,
     "rain": pl.Float64,
     "snowfall": pl.Float64,
-    "weather_code": pl.Int32,
+    "weather_code": pl.Float64,
     "cloud_cover": pl.Float64,
     "wind_speed_10m": pl.Float64,
     "wind_direction_10m": pl.Float64,
