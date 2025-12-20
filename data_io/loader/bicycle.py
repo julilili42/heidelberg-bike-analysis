@@ -30,6 +30,26 @@ class BicycleData(BaseData):
         return BicycleData(df, self.station)
     
 
+    def min_date(self):
+        return self.df.select(pl.col("datetime").min()).item()
+
+    def max_date(self):
+        return self.df.select(pl.col("datetime").max()).item()
+
+    def date_range(self):
+        return self.min_date(), self.max_date()
+    
+
+    def min_count(self, column="channels_all"):
+        return self.df.select(pl.col(column).min()).item()
+
+    def max_count(self, column="channels_all"):
+        return self.df.select(pl.col(column).max()).item()
+
+    def count_range(self, column="channels_all"):
+        return self.min_count(column), self.max_count(column)
+    
+
     def filter_time(
         self,
         weekday = None,   # True=Mo–Fr, False=Sa–So
