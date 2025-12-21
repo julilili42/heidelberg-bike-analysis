@@ -79,7 +79,6 @@ def cumulative_cluster_timeseries_aligned(
                 pl.lit(d).alias("date")
             ])
 
-            # reorder centroids to aligned label space
             new_centroids = np.zeros_like(centroids)
             for cur, prev in mapping.items():
                 new_centroids[prev] = centroids[cur]
@@ -97,3 +96,117 @@ def cumulative_cluster_timeseries_aligned(
         )
 
     return pl.concat(rows).sort(["station", "date"])
+
+
+def compute_cluster_means(df, features, cluster_col="cluster_k"):
+    return (
+        df.filter(pl.col("valid") == True)
+          .group_by(cluster_col)
+          .agg([pl.mean(f).alias(f) for f in features])
+    )
+
+
+
+def zscore_columns(df, cols):
+    return df.with_columns([
+        (pl.col(c) - pl.col(c).mean()) / pl.col(c).std()
+        for c in cols
+    ])
+
+
+
+def compute_utilitarian_score(
+    df,
+    dpi_col="DPI",
+    shape_col="Shape_diff_wd_we",
+    season_col="Drop_season",
+    out_col="utilitarian_score"
+):
+    return df.with_columns(
+        (
+            pl.col(dpi_col)
+            + pl.col(shape_col)
+            - pl.col(season_col)
+        ).alias(out_col)
+    )
+
+
+
+def label_clusters_by_score(
+    df,
+    cluster_col="cluster_k",
+    score_col="utilitarian_score"
+):
+    df = df.sort(score_col)
+
+    labels = {
+        df[0, cluster_col]: "leisure",
+        df[-1, cluster_col]: "utilitarian",
+    }
+
+    if df.height == 3:
+        labels[df[1, cluster_col]] = "mixed"
+
+    return labels
+
+
+
+
+def label_cluster_probabilities(cluster_probs, cluster_labels):
+    return (
+        cluster_probs
+        .with_columns(
+            pl.col("cluster")
+              .map_elements(lambda c: cluster_labels.get(c))
+              .alias("usage_type")
+        )
+    )
+
+
+
+def add_utilitarian_score(
+    df,
+    dpi_col="DPI",
+    shape_col="Shape_diff_wd_we",
+    season_col="Drop_season",
+    out_col="utilitarian_score"
+):
+    return df.with_columns(
+        (
+            pl.col(dpi_col)
+            + pl.col(shape_col)
+            - pl.col(season_col)
+        ).alias(out_col)
+    )
+
+
+
+
+def select_top_stations_per_usage(
+    cluster_probs_labeled,
+    station_scores,
+    n=2
+):
+    return (
+        cluster_probs_labeled
+        .join(
+            station_scores.select(["station", "utilitarian_score"]),
+            on="station",
+            how="left"
+        )
+        .with_columns(
+            pl.when(pl.col("usage_type") == "utilitarian")
+              .then(pl.col("utilitarian_score"))
+              .when(pl.col("usage_type") == "leisure")
+              .then(-pl.col("utilitarian_score"))
+              .otherwise(0.0)
+              .alias("ranking_score")
+        )
+        .sort(
+            ["usage_type", "probability", "ranking_score"],
+            descending=[False, True, True]
+        )
+        .group_by("usage_type")
+        .head(n)
+    )
+

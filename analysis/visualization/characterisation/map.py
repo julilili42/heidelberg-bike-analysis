@@ -8,6 +8,17 @@ CLUSTER_COLORS = {
     3: "red"
 }
 
+
+def dominant_cluster_probs(cluster_probs):
+    return (
+        cluster_probs
+        .sort("probability", descending=True)
+        .group_by("station")
+        .head(1)
+        .select(["station", "cluster", "probability"])
+    )
+
+
 def add_cluster_legend(m):
     legend_html = """
      <div style="
@@ -33,14 +44,12 @@ def add_cluster_legend(m):
     m.get_root().html.add_child(folium.Element(legend_html))
 
 
-def bicycle_station_cluster_map(loader, cluster_df, cluster_col):
-    stations = loader.get_bicyle_stations()
 
-    lats, lons = [], []
-    for s in stations:
-        lat, lon = loader.get_bicycle_location(s)
-        lats.append(lat)
-        lons.append(lon)
+def bicycle_station_cluster_map(loader, cluster_probs, min_radius=5, max_radius=20):
+    dom = dominant_cluster_probs(cluster_probs)
+
+    stations = loader.get_bicyle_stations()
+    lats, lons = zip(*(loader.get_bicycle_location(s) for s in stations))
 
     m = folium.Map(
         location=[sum(lats)/len(lats), sum(lons)/len(lons)],
@@ -48,22 +57,29 @@ def bicycle_station_cluster_map(loader, cluster_df, cluster_col):
     )
 
     for s, lat, lon in zip(stations, lats, lons):
-        cluster = (
-            cluster_df
-            .filter(pl.col("station") == s)
-            .select(cluster_col)
-            .item()
-        )
+        row = dom.filter(pl.col("station") == s)
+        if row.is_empty():
+            continue
+
+        cluster = row["cluster"].item()
+        prob = row["probability"].item()
 
         color = CLUSTER_COLORS.get(cluster, "gray")
+        radius = min_radius + prob**2 * (max_radius - min_radius)
 
         folium.CircleMarker(
             location=[lat, lon],
-            radius=7,
+            radius=radius,
             color=color,
             fill=True,
-            fill_opacity=0.9,
-            popup=f"{s}<br>Cluster {cluster}"
+            fill_color=color,
+            fill_opacity=75,  
+            popup=f"""
+            <b>{s}</b><br>
+            Cluster: {cluster}<br>
+            P = {prob:.2f}
+            """
         ).add_to(m)
 
+    add_cluster_legend(m)
     return m

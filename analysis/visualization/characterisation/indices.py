@@ -53,11 +53,16 @@ def daily_index(loader, station_name, channel="channels_all", interval=None, wee
 
 
 def monthly_index(loader, station_name, channel="channels_all", interval=None, weekday=None):
-    df = loader.get_bicycle(
-        station_name,
-        interval=interval,
-        sample_rate="30d"
-    ).filter_time(weekday=weekday).df
+    df = (
+        loader.get_bicycle(
+            station_name,
+            interval=interval,
+            sample_rate="1d"
+        )
+        .filter_time(weekday=weekday)
+        .df
+    )
+
 
     mean_C_24h = daily_mean_count(loader, station_name, interval)
 
@@ -67,8 +72,8 @@ def monthly_index(loader, station_name, channel="channels_all", interval=None, w
             pl.col("datetime").dt.month().alias("month"),
         ])
         .group_by("month")
-        .agg(pl.mean(channel).alias("mean_C_30d"))
-        .with_columns((pl.col("mean_C_30d") / mean_C_24h).alias("I_m"))
+        .agg(pl.mean(channel).alias("mean_C_1d"))
+        .with_columns((pl.col("mean_C_1d") / mean_C_24h).alias("I_m"))
         .sort("month")
     )
 

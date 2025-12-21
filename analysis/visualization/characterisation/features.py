@@ -9,7 +9,7 @@ def warm_cold_drop(Im):
     q10 = Im["I_m"].quantile(0.1)
     return (q90 - q10) / q90
 
-    
+
 def double_peak_index(Ih):
     h_m, p_m = find_peak(Ih, 5, 10)     # first peak 
     h_e, p_e = find_peak(Ih, 14, 20)    # second peak
@@ -41,8 +41,6 @@ def weekend_shape_diff(Ih_wd, Ih_we):
     return float(np.linalg.norm(p_wd - p_we))
 
 
-
-
 def calc_feature_vector(loader, station_name, interval=None):
     Ih_weekday = hourly_index(loader=loader, station_name=station_name, interval=interval, weekday=True)
     Ih_weekend = hourly_index(loader=loader, station_name=station_name, interval=interval, weekday=False)
@@ -57,7 +55,8 @@ def calc_feature_vector(loader, station_name, interval=None):
     dpi = double_peak_index(Ih_weekday)
     drop_season = warm_cold_drop(Im)
     shape_diff = weekend_shape_diff(Ih_wd=Ih_weekday,Ih_we=Ih_weekend)
-
+    
+    
     return {
         # Double peak in hourly index
         # Exists in utilitarian, does not exist in leisure
