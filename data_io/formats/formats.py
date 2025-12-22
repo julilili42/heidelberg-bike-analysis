@@ -70,11 +70,11 @@ ACCIDENT_FORMAT = {
 }
 
 HOLIDAYS_FORMAT = {
-    "id": pl.Int32,
+    "id": pl.String,
     "name": pl.String,
     "type": pl.String,
     "start_date": pl.String,
     "end_date": pl.String,
     "is_public_holiday": pl.Boolean,
-    "is_school_vacation": pl.Boolean
+    "is_school_vacation": pl.Boolean,
 }
