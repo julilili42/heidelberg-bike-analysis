@@ -84,7 +84,8 @@ def plot_hourly_indices_subplots(
     show_metrics=True,
     title_1=None,
     title_2=None,
-    filter_dates=None
+    filter_dates=None,
+    neg_dates=False
 ):
     fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)
 
@@ -96,7 +97,9 @@ def plot_hourly_indices_subplots(
         ylim=ylim,
         show_metrics=show_metrics,
         ax=axes[0],
-        extra_title=title_1
+        extra_title=title_1,
+        neg_dates=neg_dates,
+        filter_dates=filter_dates if neg_dates is True else None
     )
     plot_hourly_indices(
         loader,
@@ -184,21 +187,23 @@ def plot_hourly_indices_all(
         plt.tight_layout()
         plt.show()
 
-def plot_hourly_indices_all_subplots(loader, intervals,  title_1=None, title_2=None, channel="channels_all"):
+def plot_hourly_indices_all_subplots(loader, filter_dates, neg_dates=False, title_1=None, title_2=None, channel="channels_all"):
     fig, axes = plt.subplots(1, 2, figsize=(18, 5), sharey=True)
 
     plot_hourly_indices_all(
         loader,
         channel=channel,
         ax=axes[0],
-        title=title_1
+        title=title_1,
+        neg_dates=neg_dates,
+        filter_dates=filter_dates if neg_dates is True else None
     )
     plot_hourly_indices_all(
         loader,
         channel=channel,
         ax=axes[1],
         title=title_2,
-        filter_dates=intervals
+        filter_dates=filter_dates
     )
 
     plt.tight_layout()
