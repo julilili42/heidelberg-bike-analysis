@@ -4,10 +4,6 @@ from analysis.visualization.characterisation.indices import (hourly_index, daily
 import polars as pl
 import seaborn as sns
 
-
-
-
-
 """
 PLOT INDICES
 """

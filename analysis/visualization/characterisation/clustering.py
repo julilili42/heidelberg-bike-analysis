@@ -5,12 +5,32 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from scipy.optimize import linear_sum_assignment  
 from analysis.visualization.characterisation.features import build_feature_df
+from sklearn.metrics import adjusted_rand_score
+from dateutil.relativedelta import relativedelta
 
 
 DATASET_START = "2016-01-01"
+DATASET_END = "2024-01-01"
+TIME_SERIES_MODE = "cumulative"
 
-def cluster_until_with_centroids(loader, end_date, k=3, min_stations=5):
-    interval = (DATASET_START, end_date.isoformat())
+
+def make_interval(end_date, mode, window_months, dataset_start):
+    if mode == "cumulative":
+        return (dataset_start, end_date.isoformat())
+    elif mode == "sliding":
+        start = end_date - relativedelta(months=window_months)
+        return (start.isoformat(), end_date.isoformat())
+    else:
+        raise ValueError("mode must be 'cumulative' or 'sliding'")
+    
+
+def cluster_until_with_centroids(loader, end_date, k=3, min_stations=5, mode=TIME_SERIES_MODE, window_months=24, dataset_start=DATASET_START):
+    interval = make_interval(
+        end_date,
+        mode,
+        window_months,
+        dataset_start
+    )
 
     X = build_feature_df(loader, interval)
     X_valid = X.filter(pl.col("valid") == True)
@@ -33,7 +53,7 @@ def cluster_until_with_centroids(loader, end_date, k=3, min_stations=5):
     return df, centroids
 
 
-def monthly_dates(start="2016-01-01", end="2024-01-01"):
+def monthly_dates(start=DATASET_START, end=DATASET_END):
     return pl.date_range(
         start=date.fromisoformat(start),
         end=date.fromisoformat(end),
@@ -51,16 +71,20 @@ def match_labels(prev_centroids, cur_centroids):
     return {cur: prev for prev, cur in zip(row_ind, col_ind)}
 
 
-def cumulative_cluster_timeseries_aligned(
-    loader, k=3, start="2016-01-01", end="2024-01-01"
-):
+def cluster_timeseries_aligned(loader, k=3, start=DATASET_START, end=DATASET_END, mode=TIME_SERIES_MODE, window_months=24):
     dates = monthly_dates(start=start, end=end)
 
     rows = []
     prev_centroids = None
 
     for d in dates:
-        out = cluster_until_with_centroids(loader, d, k=k)
+        out = cluster_until_with_centroids(
+            loader,
+            d,
+            k=k,
+            mode=mode,
+            window_months=window_months
+        )
         if out is None:
             continue
 
@@ -139,15 +163,32 @@ def label_clusters_by_score(
 ):
     df = df.sort(score_col)
 
-    labels = {
-        df[0, cluster_col]: "leisure",
-        df[-1, cluster_col]: "utilitarian",
-    }
+    k = df.height
+    clusters = df[cluster_col].to_list()
 
-    if df.height == 3:
-        labels[df[1, cluster_col]] = "mixed"
+    if k == 2:
+        return {
+            clusters[0]: "recreational",
+            clusters[1]: "utilitarian",
+        }
+    
+    if k == 3:
+        return {
+            clusters[0]: "recreational",
+            clusters[1]: "mixed",
+            clusters[2]: "utilitarian",
+        }
 
-    return labels
+    if k == 4:
+        return {
+            clusters[0]: "recreational",
+            clusters[1]: "mixed recreational",
+            clusters[2]: "mixed utilitarian",
+            clusters[3]: "utilitarian",
+        }
+
+    raise ValueError(f"Unsupported k={k}")
+
 
 
 
@@ -197,10 +238,12 @@ def select_top_stations_per_usage(
         .with_columns(
             pl.when(pl.col("usage_type") == "utilitarian")
               .then(pl.col("utilitarian_score"))
-              .when(pl.col("usage_type") == "leisure")
+            .when(pl.col("usage_type") == "recreational")
               .then(-pl.col("utilitarian_score"))
-              .otherwise(0.0)
-              .alias("ranking_score")
+            .when(pl.col("usage_type").str.starts_with("mixed"))
+              .then(-pl.col("utilitarian_score").abs())
+            .otherwise(0.0)
+            .alias("ranking_score")
         )
         .sort(
             ["usage_type", "probability", "ranking_score"],
@@ -210,3 +253,16 @@ def select_top_stations_per_usage(
         .head(n)
     )
 
+
+
+
+def cluster_ari(df_a, df_b):
+    joined = (
+        df_a.select(["station", "cluster"])
+        .join(df_b.select(["station", "cluster"]), on="station")
+        .drop_nulls()
+    )
+    return adjusted_rand_score(
+        joined["cluster"].to_numpy(),
+        joined["cluster_right"].to_numpy()
+    )

@@ -2,10 +2,14 @@ import folium
 import polars as pl
 
 USAGE_COLORS = {
-    "leisure": "green",
-    "mixed": "orange",
-    "utilitarian": "red"
+    "recreational": "darkgreen",
+    "leisure": "green",              # k=3 legacy
+    "mixed": "orange",               # k=3
+    "mixed recreational": "lightgreen",
+    "mixed utilitarian": "orange",
+    "utilitarian": "red",
 }
+
 
 
 
@@ -20,8 +24,16 @@ def dominant_cluster_probs(cluster_probs_labeled):
 
 
 
-def add_usage_legend(m):
-    legend_html = """
+def add_usage_legend(m, usage_types):
+    rows = []
+    for u in usage_types:
+        color = USAGE_COLORS.get(u, "gray")
+        rows.append(
+            f'<i style="background:{color}; width:10px; height:10px; '
+            f'float:left; margin-right:6px;"></i>{u}<br>'
+        )
+
+    legend_html = f"""
      <div style="
      position: fixed;
      bottom: 40px;
@@ -34,21 +46,28 @@ def add_usage_legend(m):
      font-size: 14px;
      ">
      <b>Usage type</b><br>
-     <i style="background: green; width:10px; height:10px; float:left; margin-right:6px;"></i>
-     Leisure<br>
-     <i style="background: orange; width:10px; height:10px; float:left; margin-right:6px;"></i>
-     Mixed<br>
-     <i style="background: red; width:10px; height:10px; float:left; margin-right:6px;"></i>
-     Utilitarian
+     {''.join(rows)}
      </div>
      """
+
     m.get_root().html.add_child(folium.Element(legend_html))
 
 
 
 
-def bicycle_station_cluster_map(loader, cluster_probs_labeled, min_radius=5, max_radius=20):
+
+def bicycle_station_cluster_map(loader, cluster_probs_labeled, station_scores, min_radius=5, max_radius=20):
     dom = dominant_cluster_probs(cluster_probs_labeled)
+    
+    usage_types = (
+        cluster_probs_labeled["usage_type"]
+        .drop_nulls()
+        .unique()
+        .to_list()
+    )
+
+    
+
 
     stations = loader.get_bicyle_stations()
     lats, lons = zip(*(loader.get_bicycle_location(s) for s in stations))
@@ -66,6 +85,15 @@ def bicycle_station_cluster_map(loader, cluster_probs_labeled, min_radius=5, max
         usage = row["usage_type"].item()
         prob = row["probability"].item()
 
+        score_df = station_scores.select(["station", "utilitarian_score"])
+        score_row = score_df.filter(pl.col("station") == s)
+
+        score = (
+            score_row["utilitarian_score"].item()
+            if not score_row.is_empty()
+            else None
+        )
+        
         color = USAGE_COLORS.get(usage, "gray")
         radius = min_radius + prob**2 * (max_radius - min_radius)
 
@@ -76,12 +104,14 @@ def bicycle_station_cluster_map(loader, cluster_probs_labeled, min_radius=5, max
             fill=True,
             fill_color=color,
             fill_opacity=0.75,
-            popup=f"""
-            <b>{s}</b><br>
-            Usage: {usage}<br>
-            P = {prob:.2f}
-            """
+            popup=(
+                f"<b>{s}</b><br>"
+                f"Usage: {usage}<br>"
+                f"P = {prob:.2f}<br>"
+                f"Utilitarian score = {score:.2f}"
+            )
         ).add_to(m)
 
-    add_usage_legend(m)
+    add_usage_legend(m, usage_types)
     return m
+
