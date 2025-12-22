@@ -271,8 +271,12 @@ class DataLoader:
             for row in df.select(["start_date", "end_date"]).to_dicts()
         ]
 
-    def get_all_school_holiday_intervals(self, year=None):
-        expr = pl.col("is_school_vacation") == True
+    def get_all_holiday_intervals(self, name=None, school_vacation=True, public_holidays=True, year=None):
+        expr = pl.lit(True)
+        if name is not None:
+            expr = expr & (pl.col("name") == name)
+        expr = expr & ((pl.col("is_school_vacation") == school_vacation) | (pl.col("is_public_holiday") == public_holidays))
+        
         if year is not None:
             expr = expr & (
                 (pl.col("start_date").dt.year() == year) |
@@ -280,29 +284,12 @@ class DataLoader:
             )
         return self._get_intervals(expr)
 
-    def get_all_school_holiday_intervals_years(self, years=None):
+    def get_all_holiday_intervals_years(self, name=None, years=None, school_vacation=True, public_holidays=True):
         if years is None:
-            return self.get_all_school_holiday_intervals()
+            return self.get_all_holiday_intervals(name=name, school_vacation=school_vacation, public_holidays=public_holidays)
         intervals = []
         for year in years:
-            intervals.extend(self.get_all_school_holiday_intervals(year=year))
-        return intervals
-
-    def get_school_holiday_intervals_by_name(self, name, year=None):
-        expr = (pl.col("is_school_vacation") == True) & (pl.col("name") == name)
-        if year is not None:
-            expr = expr & (
-                (pl.col("start_date").dt.year() == year) |
-                (pl.col("end_date").dt.year() == year)
-            )
-        return self._get_intervals(expr)
-
-    def get_school_holiday_intervals_by_name_years(self, name, years=None):
-        if years is None:
-            return self.get_school_holiday_intervals_by_name(name)
-        intervals = []
-        for year in years:
-            intervals.extend(self.get_school_holiday_intervals_by_name(name, year=year))
+            intervals.extend(self.get_all_holiday_intervals(name=name, school_vacation=school_vacation, public_holidays=public_holidays, year=year))
         return intervals
 
 # Example usage:
