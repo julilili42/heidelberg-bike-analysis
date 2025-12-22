@@ -29,16 +29,16 @@ class BicycleData(BaseData):
         df = self.df.drop(columns)
         return BicycleData(df, self.station)
     
-
     def min_date(self):
         return self.df.select(pl.col("datetime").min()).item()
 
     def max_date(self):
         return self.df.select(pl.col("datetime").max()).item()
 
-    def date_range(self):
+    def date_range(self, readable=False):
+        if readable:
+            return self.min_date().strftime("%Y-%m-%d"), self.max_date().strftime("%Y-%m-%d")
         return self.min_date(), self.max_date()
-    
 
     def min_count(self, column="channels_all"):
         return self.df.select(pl.col(column).min()).item()
@@ -48,7 +48,6 @@ class BicycleData(BaseData):
 
     def count_range(self, column="channels_all"):
         return self.min_count(column), self.max_count(column)
-    
 
     def filter_time(
         self,
@@ -70,4 +69,24 @@ class BicycleData(BaseData):
         )
 
         return self.new(df)
+    
+    def filter_intervals(self, intervals, negate=False):
+        expr = None
+        
+        for start, end in intervals:
+            cond = (
+                (pl.col("datetime").dt.date() >= pl.lit(start).cast(pl.Date)) &
+                (pl.col("datetime").dt.date() <= pl.lit(end).cast(pl.Date))
+            )
+            expr = cond if expr is None else expr | cond
+        
+        if expr is None:
+            expr = pl.lit(False)
+            
+        if negate:
+            expr = ~expr
+        
+        df = self.df.filter(expr)
+        return self.new(df)
+        
     

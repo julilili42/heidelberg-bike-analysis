@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import polars as pl
 from data_io.formats.formats import (
     ACCIDENT_FORMAT,
@@ -10,6 +11,7 @@ from data_io.loader.bicycle import BicycleData
 from data_io.loader.weather import WeatherData
 from data_io.loader.accident import AccidentData
 from data_io.loader.holidays import HolidaysData
+
 
 
 class DataLoader:
@@ -127,7 +129,7 @@ class DataLoader:
         lat, lon = bd.df.select(["latitude", "longitude"]).row(0)
         return lat, lon
 
-    def get_bicycle(self, station_name, interval=None, sample_rate=None):
+    def get_bicycle(self, station_name, interval=None, sample_rate=None) -> BicycleData:
         bd = self.bicycle_data[station_name]
 
         bd = bd.drop(
@@ -250,18 +252,58 @@ class DataLoader:
         data = self.holidays_data.interval(start, end)
         data = data.df.filter(pl.col("is_school_vacation") == True)
         return data
-
+    
+    # Now enough school holidays, now to the public holidays:
     def get_public_holidays(self, start, end):
         data = self.holidays_data.interval(start, end)
         data = data.df.filter(pl.col("is_public_holiday") == True)
         return data
 
-    # For single days
     def get_public_holiday(self, date):
         data = self.holidays_data.interval(date, date)
         data = data.df.filter(pl.col("is_public_holiday") == True)
         return data
+    
+    def _get_intervals(self, filter_expr):
+        df = self.holidays_data.df.filter(filter_expr)
+        return [
+            (row["start_date"].strftime("%Y-%m-%d"), row["end_date"].strftime("%Y-%m-%d"))
+            for row in df.select(["start_date", "end_date"]).to_dicts()
+        ]
 
+    def get_all_school_holiday_intervals(self, year=None):
+        expr = pl.col("is_school_vacation") == True
+        if year is not None:
+            expr = expr & (
+                (pl.col("start_date").dt.year() == year) |
+                (pl.col("end_date").dt.year() == year)
+            )
+        return self._get_intervals(expr)
+
+    def get_all_school_holiday_intervals_years(self, years=None):
+        if years is None:
+            return self.get_all_school_holiday_intervals()
+        intervals = []
+        for year in years:
+            intervals.extend(self.get_all_school_holiday_intervals(year=year))
+        return intervals
+
+    def get_school_holiday_intervals_by_name(self, name, year=None):
+        expr = (pl.col("is_school_vacation") == True) & (pl.col("name") == name)
+        if year is not None:
+            expr = expr & (
+                (pl.col("start_date").dt.year() == year) |
+                (pl.col("end_date").dt.year() == year)
+            )
+        return self._get_intervals(expr)
+
+    def get_school_holiday_intervals_by_name_years(self, name, years=None):
+        if years is None:
+            return self.get_school_holiday_intervals_by_name(name)
+        intervals = []
+        for year in years:
+            intervals.extend(self.get_school_holiday_intervals_by_name(name, year=year))
+        return intervals
 
 # Example usage:
 # loader = DataLoader()
