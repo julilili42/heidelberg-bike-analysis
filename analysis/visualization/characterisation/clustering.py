@@ -98,7 +98,7 @@ def cumulative_cluster_timeseries_aligned(
     return pl.concat(rows).sort(["station", "date"])
 
 
-def compute_cluster_means(df, features, cluster_col="cluster_k"):
+def compute_cluster_means(df, features, cluster_col="cluster"):
     return (
         df.filter(pl.col("valid") == True)
           .group_by(cluster_col)
@@ -118,8 +118,8 @@ def zscore_columns(df, cols):
 def compute_utilitarian_score(
     df,
     dpi_col="DPI",
-    shape_col="Shape_diff_wd_we",
-    season_col="Drop_season",
+    shape_col="WSD",
+    season_col="SDI",
     out_col="utilitarian_score"
 ):
     return df.with_columns(
@@ -134,7 +134,7 @@ def compute_utilitarian_score(
 
 def label_clusters_by_score(
     df,
-    cluster_col="cluster_k",
+    cluster_col="cluster",
     score_col="utilitarian_score"
 ):
     df = df.sort(score_col)
@@ -167,8 +167,8 @@ def label_cluster_probabilities(cluster_probs, cluster_labels):
 def add_utilitarian_score(
     df,
     dpi_col="DPI",
-    shape_col="Shape_diff_wd_we",
-    season_col="Drop_season",
+    shape_col="WSD",
+    season_col="SDI",
     out_col="utilitarian_score"
 ):
     return df.with_columns(

@@ -1,11 +1,23 @@
 import matplotlib.pyplot as plt
-from analysis.visualization.characterisation.features import (warm_cold_drop, double_peak_index, weekend_shape_diff)
+from analysis.visualization.characterisation.features import (weekend_shape_diff_index, double_peak_index, seasonal_drop_index)
 from analysis.visualization.characterisation.indices import (hourly_index, daily_index, monthly_index)
 import polars as pl
+import seaborn as sns
+
+
+
+
 
 """
 PLOT INDICES
 """
+
+WD_COLOR = "tab:blue"
+WE_COLOR = "tab:orange"
+
+COLD_COLOR = "tab:brown"
+WARM_COLOR = "tab:purple"
+
 def plot_hourly_indices(
     loader,
     station_name,
@@ -26,11 +38,11 @@ def plot_hourly_indices(
 
     plt.plot(
         Ih_wd["hour"], Ih_wd["I_h"],
-        color="tab:blue", linewidth=2, label="Weekday"
+        color=WD_COLOR, linewidth=2, label="Weekday"
     )
     plt.plot(
         Ih_we["hour"], Ih_we["I_h"],
-        color="tab:orange", linewidth=2, label="Weekend"
+        color=WE_COLOR, linewidth=2, label="Weekend"
     )
 
     plt.xlabel("Hour of day")
@@ -41,7 +53,7 @@ def plot_hourly_indices(
 
     if show_metrics:
         dpi = double_peak_index(Ih_wd)
-        diff = weekend_shape_diff(Ih_wd, Ih_we)
+        diff = weekend_shape_diff_index(Ih_wd, Ih_we)
 
         plt.title(
             f"Hourly traffic index – {station_name}\n"
@@ -55,7 +67,6 @@ def plot_hourly_indices(
 
 
 
-
 def plot_daily_indices(
     loader,
     station_name,
@@ -65,13 +76,30 @@ def plot_daily_indices(
     ylim=(0.5, 1.5),
     show_metric=True
 ):
-    Id = daily_index(loader, station_name, channel, interval=interval)
+    Id = (
+        daily_index(loader, station_name, channel, interval=interval)
+        .sort("weekday")
+    )
+
+    x = Id["weekday"].to_numpy()
+    y = Id["I_d"].to_numpy()
 
     plt.figure(figsize=figsize)
 
+    # Mon–Fri
     plt.plot(
-        Id["weekday"], Id["I_d"],
-        marker="o", linewidth=2
+        x[:5], y[:5],
+        marker="o", linewidth=2, color=WD_COLOR, label="Weekday"
+    )
+    # Fri–Sat 
+    plt.plot(
+        x[4:6], y[4:6],
+        marker="o", linewidth=2, color=WD_COLOR
+    )
+    # Sat–Sun
+    plt.plot(
+        x[5:], y[5:],
+        marker="o", linewidth=2, color=WE_COLOR, label="Weekend"
     )
 
     plt.xticks(
@@ -85,9 +113,9 @@ def plot_daily_indices(
     plt.grid(alpha=0.3)
 
     if show_metric:
-        weekend_drop = Id.filter(pl.col("weekday") >= 6)["I_d"].mean()
+        weekend_mean = Id.filter(pl.col("weekday") >= 6)["I_d"].mean()
         weekday_mean = Id.filter(pl.col("weekday") <= 5)["I_d"].mean()
-        diff = weekday_mean - weekend_drop
+        diff = weekday_mean - weekend_mean
 
         plt.title(
             f"Daily traffic index – {station_name}\n"
@@ -96,20 +124,68 @@ def plot_daily_indices(
     else:
         plt.title(f"Daily traffic index – {station_name}")
 
+    plt.legend(frameon=False)
     plt.tight_layout()
     plt.show()
 
 
+def plot_monthly_indices(
+    loader,
+    station_name,
+    channel="channels_all",
+    interval=None,
+    figsize=(6, 3),
+    ylim=None,
+    show_metric=True
+):
+    Im = (
+        monthly_index(loader, station_name, channel, interval=interval)
+        .sort("month")
+    )
 
+    x = Im["month"].to_numpy()
+    y = Im["I_m"].to_numpy()
 
-def plot_monthly_indices(loader, station_name, channel = "channels_all", interval=None, ylim=None):
-    Im = monthly_index(loader, station_name, channel, interval=interval)
+    plt.figure(figsize=figsize)
 
-    print("Warm/Cold Drop:", warm_cold_drop(Im))
-    plt.figure(figsize=(6, 3))
+    # Cold season: Jan–Mar
     plt.plot(
-        Im["month"],
-        Im["I_m"],
+        x[:3], y[:3],
+        color=COLD_COLOR,
+        marker="o",
+        linewidth=2,
+        label="Cold season"
+    )
+
+    # Transition Mar–Apr (keeps line continuous)
+    plt.plot(
+        x[2:4], y[2:4],
+        color=WARM_COLOR,
+        marker="o",
+        linewidth=2
+    )
+
+    # Warm season: Apr–Oct
+    plt.plot(
+        x[3:10], y[3:10],
+        color=WARM_COLOR,
+        marker="o",
+        linewidth=2,
+        label="Warm season"
+    )
+
+    # Transition Oct–Nov
+    plt.plot(
+        x[9:11], y[9:11],
+        color=COLD_COLOR,
+        marker="o",
+        linewidth=2
+    )
+
+    # Cold season: Nov–Dec
+    plt.plot(
+        x[10:], y[10:],
+        color=COLD_COLOR,
         marker="o",
         linewidth=2
     )
@@ -120,15 +196,26 @@ def plot_monthly_indices(loader, station_name, channel = "channels_all", interva
                 "Jul","Aug","Sep","Oct","Nov","Dec"]
     )
 
-    plt.title(f"Monthly Profile – {station_name}")
-    plt.ylabel("Monthly Index $I_m$")
+    plt.xlabel("Month")
+    plt.ylabel("Monthly index $I_m$")
     plt.grid(alpha=0.3)
 
     if ylim is not None:
         plt.ylim(ylim)
 
+    if show_metric:
+        drop = seasonal_drop_index(Im)
+        plt.title(
+            f"Monthly profile – {station_name}\n"
+            f"Warm–Cold drop = {drop:.2f}"
+        )
+    else:
+        plt.title(f"Monthly profile – {station_name}")
+
+    plt.legend(frameon=False)
     plt.tight_layout()
     plt.show()
+
 
 
 
@@ -154,11 +241,11 @@ def plot_hourly_indices_all(
         # individual stations (background)
         plt.plot(
             Ih_wd["hour"], Ih_wd["I_h"],
-            color="tab:blue", alpha=0.15, linewidth=1
+            color=WD_COLOR, alpha=0.15, linewidth=1
         )
         plt.plot(
             Ih_we["hour"], Ih_we["I_h"],
-            color="tab:orange", alpha=0.15, linewidth=1
+            color=WE_COLOR, alpha=0.15, linewidth=1
         )
 
     # mean profiles (foreground)
@@ -177,11 +264,11 @@ def plot_hourly_indices_all(
 
     plt.plot(
         wd_mean["hour"], wd_mean["mean"],
-        color="tab:blue", linewidth=2.5, label="Weekday (mean)"
+        color=WD_COLOR, linewidth=2.5, label="Weekday (mean)"
     )
     plt.plot(
         we_mean["hour"], we_mean["mean"],
-        color="tab:orange", linewidth=2.5, label="Weekend (mean)"
+        color=WE_COLOR, linewidth=2.5, label="Weekend (mean)"
     )
 
     plt.xlabel("Hour of day")
@@ -194,12 +281,14 @@ def plot_hourly_indices_all(
     plt.tight_layout()
     plt.show()
 
+
+
 def plot_daily_indices_all(
     loader,
     channel="channels_all",
     interval=None,
     figsize=(8, 4),
-    ylim=(0.5, 1.5)
+    ylim=(0.3, 1.5)
 ):
     plt.figure(figsize=figsize)
 
@@ -218,17 +307,17 @@ def plot_daily_indices_all(
         # Mon–Fri
         plt.plot(
             x[:5], y[:5],
-            color="tab:blue", alpha=0.25, linewidth=1
+            color=WD_COLOR, alpha=0.25, linewidth=1
         )
         # Fri–Sat
         plt.plot(
             x[4:6], y[4:6],
-            color="tab:blue", alpha=0.25, linewidth=1
+            color=WD_COLOR, alpha=0.25, linewidth=1
         )
         # Sat–Sun
         plt.plot(
             x[5:], y[5:],
-            color="tab:orange", alpha=0.25, linewidth=1
+            color=WE_COLOR, alpha=0.25, linewidth=1
         )
 
     # mean profile
@@ -242,9 +331,9 @@ def plot_daily_indices_all(
     x = Id_mean["weekday"].to_numpy()
     y = Id_mean["mean"].to_numpy()
 
-    plt.plot(x[:5], y[:5], color="tab:blue", linewidth=3, label="Weekday (mean)")
-    plt.plot(x[4:6], y[4:6], color="tab:blue", linewidth=3)
-    plt.plot(x[5:], y[5:], color="tab:orange", linewidth=3, label="Weekend (mean)")
+    plt.plot(x[:5], y[:5], color=WD_COLOR, linewidth=3, label="Weekday (mean)")
+    plt.plot(x[4:6], y[4:6], color=WD_COLOR, linewidth=3)
+    plt.plot(x[5:], y[5:], color=WE_COLOR, linewidth=3, label="Weekend (mean)")
 
     plt.xticks(
         ticks=range(1, 8),
@@ -260,6 +349,111 @@ def plot_daily_indices_all(
 
     plt.tight_layout()
     plt.show()
+
+
+def plot_monthly_indices_all(
+    loader,
+    channel="channels_all",
+    interval=None,
+    figsize=(8, 4),
+    ylim=None
+):
+    plt.figure(figsize=figsize)
+
+    Im_all = []
+
+    # background: individual stations
+    for station in loader.get_bicyle_stations():
+        Im = (
+            monthly_index(loader, station, channel, interval=interval)
+            .sort("month")
+        )
+        Im_all.append(Im)
+
+        x = Im["month"].to_numpy()
+        y = Im["I_m"].to_numpy()
+
+        # Cold season: Jan–Mar
+        plt.plot(
+            x[:3], y[:3],
+            color=COLD_COLOR, alpha=0.25, linewidth=1
+        )
+        # Transition Mar–Apr
+        plt.plot(
+            x[2:4], y[2:4],
+            color=WARM_COLOR, alpha=0.25, linewidth=1
+        )
+        # Warm season: Apr–Oct
+        plt.plot(
+            x[3:10], y[3:10],
+            color=WARM_COLOR, alpha=0.25, linewidth=1
+        )
+        # Transition Oct–Nov
+        plt.plot(
+            x[9:11], y[9:11],
+            color=COLD_COLOR, alpha=0.25, linewidth=1
+        )
+        # Cold season: Nov–Dec
+        plt.plot(
+            x[10:], y[10:],
+            color=COLD_COLOR, alpha=0.25, linewidth=1
+        )
+
+    # mean profile (foreground)
+    Im_mean = (
+        pl.concat(Im_all)
+        .group_by("month")
+        .agg(pl.mean("I_m").alias("mean"))
+        .sort("month")
+    )
+
+    x = Im_mean["month"].to_numpy()
+    y = Im_mean["mean"].to_numpy()
+
+    # Cold season mean
+    plt.plot(
+        x[:3], y[:3],
+        color=COLD_COLOR, linewidth=3, label="Cold season (mean)"
+    )
+    # Transition Mar–Apr
+    plt.plot(
+        x[2:4], y[2:4],
+        color=WARM_COLOR, linewidth=3
+    )
+    # Warm season mean
+    plt.plot(
+        x[3:10], y[3:10],
+        color=WARM_COLOR, linewidth=3, label="Warm season (mean)"
+    )
+    # Transition Oct–Nov
+    plt.plot(
+        x[9:11], y[9:11],
+        color=COLD_COLOR, linewidth=3
+    )
+    # Cold season mean
+    plt.plot(
+        x[10:], y[10:],
+        color=COLD_COLOR, linewidth=3
+    )
+
+    plt.xticks(
+        ticks=range(1, 13),
+        labels=["Jan","Feb","Mar","Apr","May","Jun",
+                "Jul","Aug","Sep","Oct","Nov","Dec"]
+    )
+
+    plt.xlabel("Month")
+    plt.ylabel("Monthly index $I_m$")
+    plt.title("Monthly traffic indices across all stations")
+    plt.grid(alpha=0.3)
+
+    if ylim is not None:
+        plt.ylim(ylim)
+
+    plt.legend(frameon=False)
+    plt.tight_layout()
+    plt.show()
+
 
 
 """
@@ -320,3 +514,19 @@ def plot_pca_clusters(
     plt.show()
 
 
+
+def plot_feature_boxplots(
+    df,
+    features,
+    cluster_col="cluster",
+    clusters=(0, 1),
+    figsize=(4, 3)
+):
+    df_filt = df.filter(pl.col(cluster_col).is_in(clusters))
+
+    for feat in features:
+        plt.figure(figsize=figsize)
+        sns.boxplot(data=df_filt, x=cluster_col, y=feat)
+        plt.title(feat)
+        plt.tight_layout()
+        plt.show()
