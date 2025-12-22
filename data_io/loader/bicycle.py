@@ -71,22 +71,25 @@ class BicycleData(BaseData):
         return self.new(df)
     
     def filter_intervals(self, intervals, negate=False):
-        expr = None
+        df = self.df
         
-        for start, end in intervals:
-            cond = (
-                (pl.col("datetime").dt.date() >= pl.lit(start).cast(pl.Date)) &
-                (pl.col("datetime").dt.date() <= pl.lit(end).cast(pl.Date))
-            )
-            expr = cond if expr is None else expr | cond
-        
-        if expr is None:
-            expr = pl.lit(False)
+        if intervals is not None:
+            expr = None
+            for start, end in intervals:
+                cond = (
+                    (pl.col("datetime").dt.date() >= pl.lit(start).cast(pl.Date)) &
+                    (pl.col("datetime").dt.date() <= pl.lit(end).cast(pl.Date))
+                )
+                expr = cond if expr is None else expr | cond
             
-        if negate:
-            expr = ~expr
+            if expr is None:
+                expr = pl.lit(False)
+                
+            if negate:
+                expr = ~expr
+            
+            df = df.filter(expr)
         
-        df = self.df.filter(expr)
         return self.new(df)
         
     
