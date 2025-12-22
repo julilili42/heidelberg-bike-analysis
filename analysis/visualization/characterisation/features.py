@@ -56,7 +56,6 @@ def calc_feature_vector(loader, station_name, interval=None):
     drop_season = warm_cold_drop(Im)
     shape_diff = weekend_shape_diff(Ih_wd=Ih_weekday,Ih_we=Ih_weekend)
     
-    
     return {
         # Double peak in hourly index
         # Exists in utilitarian, does not exist in leisure

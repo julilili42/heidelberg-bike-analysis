@@ -1,25 +1,26 @@
 import folium
 import polars as pl
 
-CLUSTER_COLORS = {
-    0: "blue",
-    1: "orange",
-    2: "green",
-    3: "red"
+USAGE_COLORS = {
+    "leisure": "green",
+    "mixed": "orange",
+    "utilitarian": "red"
 }
 
 
-def dominant_cluster_probs(cluster_probs):
+
+def dominant_cluster_probs(cluster_probs_labeled):
     return (
-        cluster_probs
+        cluster_probs_labeled
         .sort("probability", descending=True)
         .group_by("station")
         .head(1)
-        .select(["station", "cluster", "probability"])
+        .select(["station", "cluster", "usage_type", "probability"])
     )
 
 
-def add_cluster_legend(m):
+
+def add_usage_legend(m):
     legend_html = """
      <div style="
      position: fixed;
@@ -32,21 +33,22 @@ def add_cluster_legend(m):
      border-radius: 5px;
      font-size: 14px;
      ">
-     <b>Clusters</b><br>
-     <i style="background: blue; width: 10px; height: 10px; float: left; margin-right: 6px;"></i>
-     Cluster 0<br>
-     <i style="background: orange; width: 10px; height: 10px; float: left; margin-right: 6px;"></i>
-     Cluster 1<br>
-     <i style="background: green; width: 10px; height: 10px; float: left; margin-right: 6px;"></i>
-     Cluster 2
+     <b>Usage type</b><br>
+     <i style="background: green; width:10px; height:10px; float:left; margin-right:6px;"></i>
+     Leisure<br>
+     <i style="background: orange; width:10px; height:10px; float:left; margin-right:6px;"></i>
+     Mixed<br>
+     <i style="background: red; width:10px; height:10px; float:left; margin-right:6px;"></i>
+     Utilitarian
      </div>
      """
     m.get_root().html.add_child(folium.Element(legend_html))
 
 
 
-def bicycle_station_cluster_map(loader, cluster_probs, min_radius=5, max_radius=20):
-    dom = dominant_cluster_probs(cluster_probs)
+
+def bicycle_station_cluster_map(loader, cluster_probs_labeled, min_radius=5, max_radius=20):
+    dom = dominant_cluster_probs(cluster_probs_labeled)
 
     stations = loader.get_bicyle_stations()
     lats, lons = zip(*(loader.get_bicycle_location(s) for s in stations))
@@ -61,10 +63,10 @@ def bicycle_station_cluster_map(loader, cluster_probs, min_radius=5, max_radius=
         if row.is_empty():
             continue
 
-        cluster = row["cluster"].item()
+        usage = row["usage_type"].item()
         prob = row["probability"].item()
 
-        color = CLUSTER_COLORS.get(cluster, "gray")
+        color = USAGE_COLORS.get(usage, "gray")
         radius = min_radius + prob**2 * (max_radius - min_radius)
 
         folium.CircleMarker(
@@ -73,13 +75,13 @@ def bicycle_station_cluster_map(loader, cluster_probs, min_radius=5, max_radius=
             color=color,
             fill=True,
             fill_color=color,
-            fill_opacity=75,  
+            fill_opacity=0.75,
             popup=f"""
             <b>{s}</b><br>
-            Cluster: {cluster}<br>
+            Usage: {usage}<br>
             P = {prob:.2f}
             """
         ).add_to(m)
 
-    add_cluster_legend(m)
+    add_usage_legend(m)
     return m
