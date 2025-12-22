@@ -269,6 +269,73 @@ def plot_daily_indices(
     plt.legend(frameon=False)
     plt.tight_layout()
     plt.show()
+    
+def plot_daily_indices_all(
+    loader,
+    channel="channels_all",
+    interval=None,
+    figsize=(8, 4),
+    ylim=(0.3, 1.5)
+):
+    plt.figure(figsize=figsize)
+
+    Id_all = []
+
+    for station in loader.get_bicyle_stations():
+        Id = (
+            daily_index(loader, station, channel, interval=interval)
+            .sort("weekday")
+        )
+        Id_all.append(Id)
+
+        x = Id["weekday"].to_numpy()
+        y = Id["I_d"].to_numpy()
+
+        # Mon–Fri
+        plt.plot(
+            x[:5], y[:5],
+            color=WD_COLOR, alpha=0.25, linewidth=1
+        )
+        # Fri–Sat
+        plt.plot(
+            x[4:6], y[4:6],
+            color=WD_COLOR, alpha=0.25, linewidth=1
+        )
+        # Sat–Sun
+        plt.plot(
+            x[5:], y[5:],
+            color=WE_COLOR, alpha=0.25, linewidth=1
+        )
+
+    # mean profile
+    Id_mean = (
+        pl.concat(Id_all)
+        .group_by("weekday")
+        .agg(pl.mean("I_d").alias("mean"))
+        .sort("weekday")
+    )
+
+    x = Id_mean["weekday"].to_numpy()
+    y = Id_mean["mean"].to_numpy()
+
+    plt.plot(x[:5], y[:5], color=WD_COLOR, linewidth=3, label="Weekday (mean)")
+    plt.plot(x[4:6], y[4:6], color=WD_COLOR, linewidth=3)
+    plt.plot(x[5:], y[5:], color=WE_COLOR, linewidth=3, label="Weekend (mean)")
+
+    plt.xticks(
+        ticks=range(1, 8),
+        labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    )
+
+    plt.xlabel("Day of week")
+    plt.ylabel("Daily index $I_d$")
+    plt.title("Daily traffic indices across all stations")
+    plt.ylim(ylim)
+    plt.legend(frameon=False)
+    plt.grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
 
 def plot_monthly_indices(
     loader,
