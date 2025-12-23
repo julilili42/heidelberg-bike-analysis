@@ -13,6 +13,25 @@ DATASET_START = "2016-01-01"
 DATASET_END = "2024-01-01"
 TIME_SERIES_MODE = "cumulative"
 
+def kmeans_clustering(features, k):
+    features_valid = features.filter(pl.col("valid") == True)
+
+    features_feat = features_valid.drop(["station", "valid"]).to_numpy()
+    features_scaled = StandardScaler().fit_transform(features_feat)
+
+    labels = KMeans(
+        n_clusters=k, random_state=0, n_init=20
+    ).fit_predict(features_scaled)
+
+    features_valid = features_valid.with_columns(pl.Series("cluster", labels))
+
+    return features.join(
+        features_valid.select(["station", "cluster"]),
+        on="station",
+        how="left"
+    )
+
+
 
 def make_interval(end_date, mode, window_months, dataset_start):
     if mode == "cumulative":
@@ -73,7 +92,7 @@ def match_labels(prev_centroids, cur_centroids):
 
 def cluster_timeseries_aligned(loader, k=3, start=DATASET_START, end=DATASET_END, mode=TIME_SERIES_MODE, window_months=24):
     dates = monthly_dates(start=start, end=end)
-
+    
     rows = []
     prev_centroids = None
 
