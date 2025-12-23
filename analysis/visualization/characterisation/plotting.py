@@ -11,6 +11,8 @@ from analysis.visualization.characterisation.indices import (
 )
 import polars as pl
 import seaborn as sns
+import numpy as np
+from matplotlib.lines import Line2D
 
 """
 PLOT INDICES
@@ -574,7 +576,7 @@ def plot_monthly_indices_all(
 
     Im_all = []
 
-    # background: individual stations
+    
     for station in loader.get_bicyle_stations():
         Im = monthly_index(loader, station, channel, interval=interval).sort("month")
         Im_all.append(Im)
@@ -710,3 +712,117 @@ def plot_feature_boxplots(
         plt.title(feat)
         plt.tight_layout()
         plt.show()
+
+
+def plot_cluster_probabilities_ci(
+    cluster_probs_ci,
+    station_col,
+    prob_col,
+    lo_col,
+    hi_col,
+    title = "Dominant cluster assignment with confidence intervals",
+    figsize_scale = 0.35,
+):
+    df = (
+        cluster_probs_ci
+        .sort(prob_col, descending=True)
+        .group_by(station_col)
+        .head(1)
+    )
+
+    stations = df[station_col].to_list()
+    p = df[prob_col].to_numpy()
+    lo = df[lo_col].to_numpy()
+    hi = df[hi_col].to_numpy()
+
+    y = np.arange(len(stations))
+
+    plt.figure(figsize=(6, max(3, figsize_scale * len(stations))))
+
+    plt.errorbar(
+        p,
+        y,
+        xerr=[p - lo, hi - p],
+        fmt="o",
+        color="black",
+        ecolor="gray",
+        elinewidth=1.5,
+        capsize=3,
+    )
+
+    plt.yticks(y, stations)
+    plt.xlabel("Cluster probability")
+    plt.title(title)
+    plt.xlim(0, 1)
+    plt.grid(axis="x", alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+
+
+def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
+    if color_map is None:
+        color_map = {
+            "utilitarian": "red",
+            "mixed": "orange",
+            "recreational": "green",
+        }
+
+    plt.figure(figsize=(6, 5))
+
+    for (utype,), df_u in delta_labeled.group_by("usage_type"):
+        plt.scatter(
+            df_u["ΔDPI"],
+            df_u["ΔWSD"],
+            label=utype,
+            color=color_map.get(utype, "gray"),
+            alpha=0.8,
+            edgecolors="black",
+            s=80,
+        )
+
+    if show_centers:
+        centers = (
+            delta_labeled
+            .group_by("usage_type")
+            .agg([
+                pl.median("ΔDPI").alias("x"),
+                pl.median("ΔWSD").alias("y"),
+            ])
+        )
+
+        for row in centers.iter_rows(named=True):
+            utype = row["usage_type"]
+            plt.scatter(
+                row["x"],
+                row["y"],
+                marker="X",
+                s=200,
+                color=color_map.get(utype, "gray"),
+                edgecolors="black",
+                linewidths=1.5,
+                zorder=5,
+            )
+
+
+    center_handle = Line2D(
+        [0], [0],
+        marker="X",
+        color="w",
+        label="Median center",
+        markerfacecolor="gray",
+        markeredgecolor="black",
+        markersize=10,
+        linewidth=0
+    )
+
+
+    plt.xlabel("ΔDPI (change in weekday double-peak structure)")
+    plt.ylabel("ΔWSD (change in weekday–weekend difference)")
+    plt.title("Impact of public holidays on station dominant usage patterns")
+    handles, labels = plt.gca().get_legend_handles_labels()
+    handles.append(center_handle)
+    plt.legend(handles=handles, frameon=False)
+    plt.grid(alpha=0.2)
+    plt.tight_layout()
+    plt.show()

@@ -7,21 +7,37 @@ from scipy.optimize import linear_sum_assignment
 from analysis.visualization.characterisation.features import build_feature_df
 from sklearn.metrics import adjusted_rand_score
 from dateutil.relativedelta import relativedelta
+from data_io.loader.data_loader import DataLoader
+from analysis.visualization.characterisation.helpers import wilson_ci
 
 
-DATASET_START = "2016-01-01"
-DATASET_END = "2024-01-01"
-TIME_SERIES_MODE = "cumulative"
+dl = DataLoader()
+
+GLOBAL_SCALER = StandardScaler().fit(
+    build_feature_df(dl)
+        .filter(pl.col("valid") == True)
+        .drop(["station", "valid"])
+        .to_numpy()
+)
+
+
+def kmeans_core(features_valid, k):
+    features = features_valid.drop(["station", "valid"]).to_numpy()
+    features_scaled = GLOBAL_SCALER.transform(features)
+
+    
+    km = KMeans(n_clusters=k, random_state=0, n_init=20)
+
+    labels = km.fit_predict(features_scaled)
+
+    return labels, km.cluster_centers_
+
+
 
 def kmeans_clustering(features, k):
     features_valid = features.filter(pl.col("valid") == True)
 
-    features_feat = features_valid.drop(["station", "valid"]).to_numpy()
-    features_scaled = StandardScaler().fit_transform(features_feat)
-
-    labels = KMeans(
-        n_clusters=k, random_state=0, n_init=20
-    ).fit_predict(features_scaled)
+    labels, _ = kmeans_core(features_valid, k)
 
     features_valid = features_valid.with_columns(pl.Series("cluster", labels))
 
@@ -32,47 +48,71 @@ def kmeans_clustering(features, k):
     )
 
 
-
-def make_interval(end_date, mode, window_months, dataset_start):
-    if mode == "cumulative":
-        return (dataset_start, end_date.isoformat())
-    elif mode == "sliding":
-        start = end_date - relativedelta(months=window_months)
-        return (start.isoformat(), end_date.isoformat())
-    else:
-        raise ValueError("mode must be 'cumulative' or 'sliding'")
-    
-
-def cluster_until_with_centroids(loader, end_date, k=3, min_stations=5, mode=TIME_SERIES_MODE, window_months=24, dataset_start=DATASET_START):
+def cluster_until_with_centroids(loader, k, start, end, mode, window_months, min_stations=5):
     interval = make_interval(
-        end_date,
-        mode,
-        window_months,
-        dataset_start
+        start=start,
+        end=end,
+        mode=mode,
+        window_months=window_months,
     )
 
-    X = build_feature_df(loader, interval)
-    X_valid = X.filter(pl.col("valid") == True)
+    features = build_feature_df(loader, interval)
+    features_valid = features.filter(pl.col("valid") == True)
 
-    if X_valid.height < max(k, min_stations):
+    if features_valid.height < max(k, min_stations):
         return None
 
-    X_feat = X_valid.drop(["station", "valid"]).to_numpy()
-    X_scaled = StandardScaler().fit_transform(X_feat)
+    labels, centroids = kmeans_core(features_valid, k)
 
-    km = KMeans(n_clusters=k, random_state=0, n_init=20)
-    labels = km.fit_predict(X_scaled)
-
-    centroids = km.cluster_centers_
-
-    df = X_valid.with_columns(
+    df = features_valid.with_columns(
         pl.Series("cluster", labels, dtype=pl.Int32)
     )
 
     return df, centroids
 
 
-def monthly_dates(start=DATASET_START, end=DATASET_END):
+
+def cluster_timeseries_usage(loader, k, start, end, mode, window_months):
+    dates = monthly_dates(start=start, end=end)
+    rows = []
+
+    for d in dates:
+        out = cluster_until_with_centroids(
+            loader=loader,
+            k=k,
+            mode=mode,
+            window_months=window_months,
+            start=start,
+            end=d
+        )
+        if out is None:
+            continue
+
+        df, _ = out
+
+        cluster_means = compute_cluster_means(
+            df,
+            features=["DPI", "WSD", "SDI"]
+        )
+        cluster_means = zscore_columns(cluster_means, ["DPI", "WSD", "SDI"])
+        cluster_means = compute_utilitarian_score(cluster_means)
+
+        cluster_labels = label_clusters_by_score(cluster_means)
+
+        df_labeled = df.with_columns([
+            pl.col("cluster")
+              .map_elements(lambda c: cluster_labels.get(c))
+              .alias("usage_type"),
+            pl.lit(d).alias("date")
+        ])
+
+        rows.append(df_labeled.select(["station", "date", "usage_type"]))
+
+    return pl.concat(rows) if rows else pl.DataFrame()
+
+
+
+def monthly_dates(start, end):
     return pl.date_range(
         start=date.fromisoformat(start),
         end=date.fromisoformat(end),
@@ -81,70 +121,54 @@ def monthly_dates(start=DATASET_START, end=DATASET_END):
     )
 
 
-def match_labels(prev_centroids, cur_centroids):
-    cost = np.linalg.norm(
-        prev_centroids[:, None, :] - cur_centroids[None, :, :],
-        axis=2
-    )
-    row_ind, col_ind = linear_sum_assignment(cost)
-    return {cur: prev for prev, cur in zip(row_ind, col_ind)}
-
-
-def cluster_timeseries_aligned(loader, k=3, start=DATASET_START, end=DATASET_END, mode=TIME_SERIES_MODE, window_months=24):
-    dates = monthly_dates(start=start, end=end)
+def make_interval(start, end, mode, window_months):
+    if mode == "cumulative":
+        return (start, end.isoformat())
+    elif mode == "sliding":
+        start = end - relativedelta(months=window_months)
+        return (start.isoformat(), end.isoformat())
+    else:
+        raise ValueError("mode must be 'cumulative' or 'sliding'")
     
-    rows = []
-    prev_centroids = None
 
-    for d in dates:
-        out = cluster_until_with_centroids(
-            loader,
-            d,
-            k=k,
-            mode=mode,
-            window_months=window_months
+
+def usage_probabilities(df_usage, alpha=0.05):
+    return (
+        df_usage
+        .group_by(["station", "usage_type"])
+        .agg(pl.len().alias("k"))
+        .with_columns(
+            pl.col("k").sum().over("station").alias("N")
         )
-        if out is None:
-            continue
-
-        df, centroids = out
-
-        if prev_centroids is None:
-            aligned = df.with_columns(pl.lit(d).alias("date"))
-            prev_centroids = centroids
-        else:
-            mapping = match_labels(prev_centroids, centroids)
-
-            aligned = df.with_columns([
-                pl.col("cluster")
-                  .map_elements(lambda x: mapping.get(x, x), return_dtype=pl.Int32)
-                  .alias("cluster"),
-                pl.lit(d).alias("date")
-            ])
-
-            new_centroids = np.zeros_like(centroids)
-            for cur, prev in mapping.items():
-                new_centroids[prev] = centroids[cur]
-            prev_centroids = new_centroids
-
-        rows.append(aligned.select(["station", "date", "cluster"]))
-
-    if not rows:
-        return pl.DataFrame(
-            schema={
-                "station": pl.Utf8,
-                "date": pl.Date,
-                "cluster": pl.Int32
-            }
+        .with_columns(
+            (pl.col("k") / pl.col("N")).alias("probability")
         )
+        .with_columns([
+            pl.struct(["k", "N"])
+              .map_elements(lambda x: wilson_ci(x["k"], x["N"], alpha)[0])
+              .alias("ci_low"),
+            pl.struct(["k", "N"])
+              .map_elements(lambda x: wilson_ci(x["k"], x["N"], alpha)[1])
+              .alias("ci_high"),
+        ])
+        .sort(["station", "usage_type"])
+    )
 
-    return pl.concat(rows).sort(["station", "date"])
+
+
+def dominant_usage(df_probs):
+    return (
+        df_probs
+        .sort("probability", descending=True)
+        .group_by("station")
+        .head(1)
+    )
+
 
 
 def compute_cluster_means(df, features, cluster_col="cluster"):
     return (
-        df.filter(pl.col("valid") == True)
-          .group_by(cluster_col)
+        df.group_by(cluster_col)
           .agg([pl.mean(f).alias(f) for f in features])
     )
 
@@ -210,8 +234,6 @@ def label_clusters_by_score(
 
 
 
-
-
 def label_cluster_probabilities(cluster_probs, cluster_labels):
     return (
         cluster_probs
@@ -271,8 +293,6 @@ def select_top_stations_per_usage(
         .group_by("usage_type")
         .head(n)
     )
-
-
 
 
 def cluster_ari(df_a, df_b):
