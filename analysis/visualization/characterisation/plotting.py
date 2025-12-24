@@ -768,12 +768,21 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
             "recreational": "green",
         }
 
+    has_dpi = "ΔDPI" in delta_labeled.columns
+    has_wsd = "ΔWSD" in delta_labeled.columns
+
+    if not (has_dpi or has_wsd):
+        raise ValueError("No holiday delta features available for plotting")
+
     plt.figure(figsize=(6, 5))
 
     for (utype,), df_u in delta_labeled.group_by("usage_type"):
+        x = df_u["ΔDPI"] if has_dpi else np.zeros(df_u.height)
+        y = df_u["ΔWSD"] if has_wsd else np.zeros(df_u.height)
+
         plt.scatter(
-            df_u["ΔDPI"],
-            df_u["ΔWSD"],
+            x,
+            y,
             label=utype,
             color=color_map.get(utype, "gray"),
             alpha=0.8,
@@ -782,13 +791,21 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
         )
 
     if show_centers:
+        agg_exprs = []
+        if has_dpi:
+            agg_exprs.append(pl.median("ΔDPI").alias("x"))
+        else:
+            agg_exprs.append(pl.lit(0.0).alias("x"))
+
+        if has_wsd:
+            agg_exprs.append(pl.median("ΔWSD").alias("y"))
+        else:
+            agg_exprs.append(pl.lit(0.0).alias("y"))
+
         centers = (
             delta_labeled
             .group_by("usage_type")
-            .agg([
-                pl.median("ΔDPI").alias("x"),
-                pl.median("ΔWSD").alias("y"),
-            ])
+            .agg(agg_exprs)
         )
 
         for row in centers.iter_rows(named=True):
@@ -804,8 +821,15 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
                 zorder=5,
             )
 
+    xlabel = "ΔDPI (change in weekday double-peak structure)" if has_dpi else ""
+    ylabel = "ΔWSD (change in weekday–weekend difference)" if has_wsd else ""
 
-    center_handle = Line2D(
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title("Impact of public holidays on station dominant usage patterns")
+
+    handles, labels = plt.gca().get_legend_handles_labels()
+    handles.append(Line2D(
         [0], [0],
         marker="X",
         color="w",
@@ -814,15 +838,9 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
         markeredgecolor="black",
         markersize=10,
         linewidth=0
-    )
-
-
-    plt.xlabel("ΔDPI (change in weekday double-peak structure)")
-    plt.ylabel("ΔWSD (change in weekday–weekend difference)")
-    plt.title("Impact of public holidays on station dominant usage patterns")
-    handles, labels = plt.gca().get_legend_handles_labels()
-    handles.append(center_handle)
+    ))
     plt.legend(handles=handles, frameon=False)
+
     plt.grid(alpha=0.2)
     plt.tight_layout()
     plt.show()

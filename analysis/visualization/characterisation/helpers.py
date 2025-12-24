@@ -19,7 +19,3 @@ def wilson_ci(k, n, alpha=0.05):
     margin = z * np.sqrt((p * (1 - p) + z**2 / (4 * n)) / n) / denom
 
     return center - margin, center + margin
-
-
-
-

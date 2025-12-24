@@ -3,7 +3,6 @@ import polars as pl
 from datetime import date
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from scipy.optimize import linear_sum_assignment  
 from analysis.visualization.characterisation.features import build_feature_df
 from sklearn.metrics import adjusted_rand_score
 from dateutil.relativedelta import relativedelta
@@ -13,22 +12,11 @@ from analysis.visualization.characterisation.helpers import wilson_ci
 
 dl = DataLoader()
 
-GLOBAL_SCALER = StandardScaler().fit(
-    build_feature_df(dl)
-        .filter(pl.col("valid") == True)
-        .drop(["station", "valid"])
-        .to_numpy()
-)
-
-
 def kmeans_core(features_valid, k):
     features = features_valid.drop(["station", "valid"]).to_numpy()
 
     scaler = StandardScaler()
     features_scaled = scaler.fit_transform(features)
-
-    #features_scaled = GLOBAL_SCALER.transform(features)
-
     
     km = KMeans(n_clusters=k, random_state=0, n_init=20)
 
@@ -76,7 +64,7 @@ def cluster_until_with_centroids(loader, k, start, end, mode, window_months, min
 
 
 
-def cluster_timeseries_usage(loader, k, start, end, mode, window_months):
+def cluster_timeseries_usage(loader, k, start, end, mode, window_months, features):
     dates = monthly_dates(start=start, end=end)
     rows = []
 
@@ -95,13 +83,13 @@ def cluster_timeseries_usage(loader, k, start, end, mode, window_months):
         df, _ = out
 
         cluster_means = compute_cluster_means(
-            df,
-            features=["DPI", "WSD", "SDI"]
+            df=df,
+            features=features
         )
-        cluster_means = zscore_columns(cluster_means, ["DPI", "WSD", "SDI"])
-        cluster_means = compute_utilitarian_score(cluster_means)
+        cluster_means = zscore_columns(df=cluster_means, features=features)
+        cluster_means = compute_utilitarian_score(df=cluster_means, features=features)
 
-        cluster_labels = label_clusters_by_score(cluster_means)
+        cluster_labels = label_clusters_by_score(df=cluster_means)
 
         df_labeled = df.with_columns([
             pl.col("cluster")
@@ -178,29 +166,24 @@ def compute_cluster_means(df, features, cluster_col="cluster"):
 
 
 
-def zscore_columns(df, cols):
+def zscore_columns(df, features):
     return df.with_columns([
         (pl.col(c) - pl.col(c).mean()) / pl.col(c).std()
-        for c in cols
+        for c in features
     ])
 
 
 
-def compute_utilitarian_score(
-    df,
-    dpi_col="DPI",
-    shape_col="WSD",
-    season_col="SDI",
-    out_col="utilitarian_score"
-):
-    return df.with_columns(
-        (
-            pl.col(dpi_col)
-            + pl.col(shape_col)
-            - pl.col(season_col)
-        ).alias(out_col)
-    )
+def compute_utilitarian_score(df, features, out_col="utilitarian_score"):
+    expr = 0
+    if "DPI" in features:
+        expr += pl.col("DPI")
+    if "WSD" in features:
+        expr += pl.col("WSD")
+    if "SDI" in features:
+        expr -= pl.col("SDI")
 
+    return df.with_columns(expr.alias(out_col))
 
 
 def label_clusters_by_score(

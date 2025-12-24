@@ -3,7 +3,6 @@ from analysis.visualization.characterisation.features import calc_feature_vector
 
 def compute_holiday_deltas(loader):
     intervals = loader.get_all_holiday_intervals(school_vacation=False)
-
     rows = []
 
     for station in loader.get_bicyle_stations():
@@ -21,13 +20,19 @@ def compute_holiday_deltas(loader):
         if baseline is None or holiday is None:
             continue
 
-        rows.append({
-            "station": station,
-            "ΔDPI": holiday["DPI"] - baseline["DPI"],
-            "ΔWSD": holiday["WSD"] - baseline["WSD"],
-        })
+        row = {"station": station}
+
+        if "DPI" in baseline and "DPI" in holiday:
+            row["ΔDPI"] = holiday["DPI"] - baseline["DPI"]
+
+        if "WSD" in baseline and "WSD" in holiday:
+            row["ΔWSD"] = holiday["WSD"] - baseline["WSD"]
+
+        if len(row) > 1:  
+            rows.append(row)
 
     return pl.DataFrame(rows)
+
 
 def dominant_usage_per_station(usage_probs):
     return (
@@ -50,16 +55,30 @@ def label_deltas_with_usage(delta_df, usage_probs):
 
 
 def holiday_impact_by_usage(delta_labeled):
+    agg_exprs = []
+
+    if "ΔDPI" in delta_labeled.columns:
+        agg_exprs.append(
+            pl.median("ΔDPI").alias("ΔDPI_median")
+            #pl.quantile("DPI", 0.25).alias("ΔDPI_q25"),
+            #pl.quantile("DPI", 0.75).alias("ΔDPI_q75"),
+        )
+
+    if "ΔWSD" in delta_labeled.columns:
+        agg_exprs.append(
+            pl.median("ΔWSD").alias("ΔWSD_median")
+            #pl.quantile("WSD", 0.25).alias("ΔWSD_q25"),
+            #pl.quantile("WSD", 0.75).alias("ΔWSD_q75"),
+        )
+
+    if not agg_exprs:
+        return pl.DataFrame()
+
     return (
         delta_labeled
         .group_by("usage_type")
-        .agg([
-            pl.median("ΔDPI").alias("ΔDPI_median"),
-            #pl.quantile("DPI", 0.25).alias("ΔDPI_q25"),
-            #pl.quantile("DPI", 0.75).alias("ΔDPI_q75"),
-            pl.median("ΔWSD").alias("ΔWSD_median"),
-            #pl.quantile("WSD", 0.25).alias("ΔWSD_q25"),
-            #pl.quantile("WSD", 0.75).alias("ΔWSD_q75"),
-        ])
+        .agg(agg_exprs)
     )
+
+
 
