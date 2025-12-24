@@ -23,7 +23,11 @@ GLOBAL_SCALER = StandardScaler().fit(
 
 def kmeans_core(features_valid, k):
     features = features_valid.drop(["station", "valid"]).to_numpy()
-    features_scaled = GLOBAL_SCALER.transform(features)
+
+    scaler = StandardScaler()
+    features_scaled = scaler.fit_transform(features)
+
+    #features_scaled = GLOBAL_SCALER.transform(features)
 
     
     km = KMeans(n_clusters=k, random_state=0, n_init=20)
