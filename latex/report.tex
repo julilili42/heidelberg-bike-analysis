@@ -1,0 +1,191 @@
+%%%%%%%% DATA LITERACY 2025 LATEX PROJECT TEMPLATE FILE %%%%%%%%%%%%%%%%%
+%%% Based on the 2025 ICML template, available at https://icml.cc/Conferences/2025/AuthorInstructions %%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+
+\usepackage{tikz}
+% Corporate Design of the University of Tübingen
+% Primary Colors
+\definecolor{TUred}{RGB}{165,30,55}
+\definecolor{TUgold}{RGB}{180,160,105}
+\definecolor{TUdark}{RGB}{50,65,75}
+\definecolor{TUgray}{RGB}{175,179,183}
+
+% Secondary Colors
+\definecolor{TUdarkblue}{RGB}{65,90,140}
+\definecolor{TUblue}{RGB}{0,105,170}
+\definecolor{TUlightblue}{RGB}{80,170,200}
+\definecolor{TUlightgreen}{RGB}{130,185,160}
+\definecolor{TUgreen}{RGB}{125,165,75}
+\definecolor{TUdarkgreen}{RGB}{50,110,30}
+\definecolor{TUocre}{RGB}{200,80,60}
+\definecolor{TUviolet}{RGB}{175,110,150}
+\definecolor{TUmauve}{RGB}{180,160,150}
+\definecolor{TUbeige}{RGB}{215,180,105}
+\definecolor{TUorange}{RGB}{210,150,0}
+\definecolor{TUbrown}{RGB}{145,105,70}
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2023} with \usepackage[nohyperref]{icml2023} above.
+\usepackage{hyperref}
+
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+\usepackage[accepted]{icml2025}
+
+% For theorems and such
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+
+\usepackage[textsize=tiny]{todonotes}
+
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{Project Report Template for Data Literacy 2025}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{Usage Patterns of Bicycle Counting Stations in Heidelberg \\ and the Influence of External Factors}
+
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Julian Jurcevic}{equal,first}
+\icmlauthor{Martin Eichler}{equal,second}
+\icmlauthor{Simon Rappenecker}{equal,third}
+\icmlauthor{Tarik Eker}{equal,fourth}
+\end{icmlauthorlist}
+
+% fill in your matrikelnummer, email address, degree, for each group member
+\icmlaffiliation{first}{Matrikelnummer 12345678, MSc Computer Science}
+\icmlaffiliation{second}{Matrikelnummer 6009076, MSc Computer Science}
+\icmlaffiliation{third}{Matrikelnummer 6324777, MSc Machine Learning}
+\icmlaffiliation{fourth}{Matrikelnummer 5668988, MSc Computer Science}
+
+% put your email addresses here. You can use initials to save space, 
+% DO USE YOUR UNIVERSITY EMAIL ADDRESS!
+\icmlcorrespondingauthor{JJ}{7167089julian-steffan.jurcevic@student.uni-tuebingen.de} 
+\icmlcorrespondingauthor{ME}{martin.eichler@student.uni-tuebingen.de}
+\icmlcorrespondingauthor{SR}{simon.rappenecker@student.uni-tuebingen.de}
+\icmlcorrespondingauthor{TE}{tarik.eker@student.uni-tuebingen.de}
+
+% You may provide any keywords that you
+% find helpful for describing your paper; these ar^^e used to populate
+% the "keywords" metadata in the PDF but will not be shown in the document
+\icmlkeywords{Machine Learning, ICML}
+
+\vskip 0.3in
+]
+% Footnote
+
+%\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\begin{abstract}
+\begin{itemize}
+    \item Desribe topic
+    \item Data source (just heidelberg) and external Factors
+    \item sentence in one method
+    \item Results briefly
+\end{itemize}
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+\begin{itemize}
+    \item Short introduction, but more motivational, bicycle traffic more important over the years...
+    \item Name what is interesting and why it matters
+    \item Shortly introduce the data, and the main method
+\end{itemize}
+
+\section{Data}\label{sec:data}
+Begin describing each dataset, DO NOT REPEAT WHAT THIS SECTION IS about.
+\begin{itemize}
+    \item Cyclist data
+    \item Describe shortly what it is and how it is physically collected, what information does it contain?
+    \item Describe the fetching process and SOURCE AS HYPERLINK OR FOOTNOTE?
+    \item Link to figure showing the placement in Heidelberg, evaluate the placement, describe geography, flat, etc. 
+    \item Data Sanity, show a plot for a few (or only one) station, maybe also show failures and give more information about it? PLOT: SRTATION
+\end{itemize}
+\begin{itemize}
+    \item Weather data, 
+    \item Why we need this, Station data is bad, describing fetching, here we name the source
+    \item OPTIONAL: Give comparision plot between temperatures and bad metrics as rain PLOT: WEATHERDATA
+\end{itemize}
+\begin{itemize}
+    \item Accident data? Not used, but need to include it
+\end{itemize}
+\begin{itemize}
+    \item Holiday data,
+    \item We we need it, describe source, also name that there were some errors in the dataset, we have to be careful, ...
+\end{itemize}
+\section{Method}\label{sec:methods}
+\begin{itemize}
+    \item Describe how we identify usage patterns!
+    \item k-means with custom features,
+    \item and in what we classifly, name each category, also explain why this makes sense, maybe link to related work \citep{american_bike_patterns}
+    \item describe each feature include math (with eq. number), link plot, show typical usage pattern PLOT: usage pattern, now cite related work \citep{american_bike_patterns}, and name why we are different
+    \item they are rule based, we are more implicit!
+\end{itemize}
+
+% This is the template for a figure from the original ICML submission pack. In lecture 10 we will discuss plotting in detail.
+% Refer to this lecture on how to include figures in this text.
+% 
+% \begin{figure}[ht]
+% \vskip 0.2in
+% \begin{center}
+% \centerline{\includegraphics[width=\columnwidth]{icml_numpapers}}
+% \caption{Historical locations and number of accepted papers for International
+% Machine Learning Conferences (ICML 1993 -- ICML 2008) and International
+% Workshops on Machine Learning (ML 1988 -- ML 1992). At the time this figure was
+% produced, the number of accepted papers for ICML 2008 was unknown and instead
+% estimated.}
+% \label{icml-historical}
+% \end{center}
+% \vskip -0.2in
+% \end{figure}
+
+\section{Results}\label{sec:results}
+\begin{itemize}
+    \item describe temporal shift, describe why this is expected and why, PLOT: city,
+    \item describe holidays impact, describe behaviour (similar as weekend) PLOT: show shift
+    \item include also plot of different public holidays (my own one), this is just to have a funny fact (Vater Tag) PLOT: funny plot, na werden zu viele plots
+    \item describe weather impact, obvious PLOT: weather
+\end{itemize}
+
+\section{Conclusion}\label{sec:conclusion}
+\begin{itemize}
+    \item summarize
+    \item limitations
+    \item problems
+    \item statements that can be made
+\end{itemize}
+
+\newpage
+
+\section*{Contribution Statement}
+Add this, see original template
+
+\bibliography{bibliography}
+\bibliographystyle{icml2025}
+
+\end{document}
+
+% This document was modified from the files available at https://icml.cc/Conferences/2025/AuthorInstructions
+% the full copyright notice is available within the file icml2025.sty
