@@ -74,7 +74,7 @@
 \end{icmlauthorlist}
 
 % fill in your matrikelnummer, email address, degree, for each group member
-\icmlaffiliation{first}{Matrikelnummer 12345678, MSc Computer Science}
+\icmlaffiliation{first}{Matrikelnummer 7167089, MSc Computer Science}
 \icmlaffiliation{second}{Matrikelnummer 6009076, MSc Computer Science}
 \icmlaffiliation{third}{Matrikelnummer 6324777, MSc Machine Learning}
 \icmlaffiliation{fourth}{Matrikelnummer 5668988, MSc Computer Science}
@@ -136,14 +136,58 @@ Begin describing each dataset, DO NOT REPEAT WHAT THIS SECTION IS about.
     \item We we need it, describe source, also name that there were some errors in the dataset, we have to be careful, ...
 \end{itemize}
 \section{Method}\label{sec:methods}
+Previous works often rely on predefined rules to categorize bicycle traffic \citep{american_bike_patterns}. However, such an approach may fail to capture hybrid usage patterns.
+We propose a more data-driven, implicit approach. By extracting features that quantify the 'shape' of daily, weekly, and seasonal profiles,
+we map each station into a multi-dimensional feature space. This allows us to use unsupervised k-means clustering \citep{kmeans} to discover different station types. \\ \\
+In a subsequent step in chapter \ref{sec:results}, we assign one of the following labels to each cluster (cf. Fig. \todo{Figure Patterns, Indices}):
 \begin{itemize}
-    \item Describe how we identify usage patterns!
-    \item k-means with custom features,
-    \item and in what we classifly, name each category, also explain why this makes sense, maybe link to related work \citep{american_bike_patterns}
-    \item describe each feature include math (with eq. number), link plot, show typical usage pattern PLOT: usage pattern, now cite related work \citep{american_bike_patterns}, and name why we are different
-    \item they are rule based, we are more implicit!
+    \item \emph{Utilitarian}: Traffic showing strong commuting patterns, with two distinct peaks in traffic volume during the morning and afternoon hours.
+    \item \emph{Recreational}: Traffic dominated by leisure activities. These locations exhibit a single peak in traffic volume around midday or early afternoon.
+    \item \emph{Mixed}: Locations that serve a dual purpose, showing characteristics of both utilitarian and recreational usage.
 \end{itemize}
-
+% k-Means Features
+To characterise the counting stations, we derive three distinct features that capture traffic patterns across different timescales: daily, weekly and seasonal
+to exploit the distinct pattern visible in Figure xyz \todo{Figure pattern}.
+% DPI
+\subsection*{Double Peak Index (DPI)}\label{sec:dpi}
+Weekday hourly profiles of some stations exhibit a double-peak structure, typically associated with morning and evening commuting.
+The DPI quantifies this behaviour by identifying dominant morning (5–10 h) and evening (14–20 h) peaks and relating their magnitudes to the average midday level (8–14 h). 
+Stations with clear, balanced commuting peaks yield high DPI values, whereas flat or single-peak profiles result in low scores. \\ \\ 
+Formally, let $p_m$ and $p_e$ denote the magnitudes of the morning and evening peaks at hours $h_m$ and $h_e$, and let $m$ be the average midday traffic level. The DPI is defined as
+\begin{align*}
+    \text{DPI} &= \max\!\left( S \cdot Y \cdot D,\, 0 \right)
+\end{align*}
+where $S$, $Y$ and $D$ models strength, symmetry and distance, respectively:
+\begin{align*}
+        S &= \frac{(p_m - m) + (p_e - m)}{2} \\
+    Y &= 1 - \frac{|p_m - p_e|}{\max(p_m, p_e)} \\
+    D &= \min\!\left(\frac{|h_e - h_m|}{10},\, 1\right)
+\end{align*}
+\subsection*{Weekend Shape Difference (WSD)}\label{sec:wsd}
+% WSD
+Differences between weekday and weekend hourly traffic patterns provide an additional discriminator between usage types. To capture this effect, we compare the shape of the weekday and weekend hourly profiles.
+Let $\mathbf{p}^{wd}$ and $\mathbf{p}^{we}$ denote the weekday and weekend hourly profiles, normalised to sum to one.
+\begin{align*}
+\text{WSD} =
+\left\lVert
+\frac{\mathbf{p}^{wd}}{\sum_h p^{wd}_h}
+-
+\frac{\mathbf{p}^{we}}{\sum_h p^{we}_h}
+\right\rVert_2
+\end{align*}
+% SDI
+\subsection*{Seasonal Drop Index (SDI)}\label{sec:sdi}
+Finally, we consider long-term patterns. Seasonality provides a discriminator between leisure and utilitarian-oriented stations. The SDI quantifies the relative decline between high and low-usage months.
+Let $I_m$ denote the monthly index values of a station. Using upper and lower quantiles to ensure robustness against outliers
+\begin{align*}
+q_{90} &= \text{quantile}_{0.9}(I_m) \\
+q_{10} &= \text{quantile}_{0.1}(I_m)
+\end{align*}
+the SDI is defined as
+\begin{align*}
+\text{SDI} &= \frac{q_{90} - q_{10}}{q_{90}}
+\end{align*}
+High values indicate strong seasonal variation, whereas low values correspond to relatively stable, year-round usage.
 % This is the template for a figure from the original ICML submission pack. In lecture 10 we will discuss plotting in detail.
 % Refer to this lecture on how to include figures in this text.
 % 
