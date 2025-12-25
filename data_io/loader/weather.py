@@ -22,3 +22,32 @@ class WeatherData(BaseData):
             ])
         )
         return WeatherData(df)
+    
+
+    def get_intervals(self, condition):
+        df = (
+            self.df
+            .with_columns(pl.col("datetime").dt.date().alias("date"))
+            .filter(condition)
+            .select("date")
+            .unique()
+            .sort("date")
+        )
+
+        dates = df["date"].to_list()
+        if not dates:
+            return []
+
+        intervals = []
+        start = prev = dates[0]
+
+        for d in dates[1:]:
+            if (d - prev).days == 1:
+                prev = d
+            else:
+                intervals.append((start.isoformat(), prev.isoformat()))
+                start = prev = d
+
+        intervals.append((start.isoformat(), prev.isoformat()))
+        return intervals
+    

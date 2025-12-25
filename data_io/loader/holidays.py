@@ -23,6 +23,6 @@ class HolidaysData(BaseData):
     def drop(self, columns: list[str]):
         df = self.df.drop(columns)
         return HolidaysData(df)
-
+    
     def resample(self, rate: str):
         raise NotImplementedError("Makes no sense for holidays")

@@ -25,21 +25,6 @@ class BicycleData(BaseData):
         )
         return BicycleData(df, self.station)    
     
-    def drop(self, columns: list[str]):
-        df = self.df.drop(columns)
-        return BicycleData(df, self.station)
-    
-    def min_date(self):
-        return self.df.select(pl.col("datetime").min()).item()
-
-    def max_date(self):
-        return self.df.select(pl.col("datetime").max()).item()
-
-    def date_range(self, readable=False):
-        if readable:
-            return self.min_date().strftime("%Y-%m-%d"), self.max_date().strftime("%Y-%m-%d")
-        return self.min_date(), self.max_date()
-
     def min_count(self, column="channels_all"):
         return self.df.select(pl.col(column).min()).item()
 
@@ -49,47 +34,4 @@ class BicycleData(BaseData):
     def count_range(self, column="channels_all"):
         return self.min_count(column), self.max_count(column)
 
-    def filter_time(
-        self,
-        weekday = None,   # True=Mo–Fr, False=Sa–So
-        time_frame = (0, 24)
-    ):
-        df = self.df
-        hour_min, hour_max = time_frame
 
-        if weekday is not None:
-            if weekday:
-                df = df.filter(pl.col("datetime").dt.weekday() < 5)
-            else:
-                df = df.filter(pl.col("datetime").dt.weekday() >= 5)
-
-        df = df.filter(
-            (pl.col("datetime").dt.hour() >= hour_min) &
-            (pl.col("datetime").dt.hour() < hour_max)
-        )
-
-        return self.new(df)
-    
-    def filter_intervals(self, intervals, negate=False):
-        df = self.df
-        
-        if intervals is not None:
-            expr = None
-            for start, end in intervals:
-                cond = (
-                    (pl.col("datetime").dt.date() >= pl.lit(start).cast(pl.Date)) &
-                    (pl.col("datetime").dt.date() <= pl.lit(end).cast(pl.Date))
-                )
-                expr = cond if expr is None else expr | cond
-            
-            if expr is None:
-                expr = pl.lit(False)
-                
-            if negate:
-                expr = ~expr
-            
-            df = df.filter(expr)
-        
-        return self.new(df)
-        
-    

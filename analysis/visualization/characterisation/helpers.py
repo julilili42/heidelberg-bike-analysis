@@ -19,3 +19,50 @@ def wilson_ci(k, n, alpha=0.05):
     margin = z * np.sqrt((p * (1 - p) + z**2 / (4 * n)) / n) / denom
 
     return center - margin, center + margin
+
+
+def impact_by_usage(delta_labeled):
+    agg_exprs = []
+
+    if "ΔDPI" in delta_labeled.columns:
+        agg_exprs.append(
+            pl.median("ΔDPI").alias("ΔDPI_median")
+            #pl.quantile("DPI", 0.25).alias("ΔDPI_q25"),
+            #pl.quantile("DPI", 0.75).alias("ΔDPI_q75"),
+        )
+
+    if "ΔWSD" in delta_labeled.columns:
+        agg_exprs.append(
+            pl.median("ΔWSD").alias("ΔWSD_median")
+            #pl.quantile("WSD", 0.25).alias("ΔWSD_q25"),
+            #pl.quantile("WSD", 0.75).alias("ΔWSD_q75"),
+        )
+
+    if not agg_exprs:
+        return pl.DataFrame()
+
+    return (
+        delta_labeled
+        .group_by("usage_type")
+        .agg(agg_exprs)
+    )
+
+
+
+def dominant_usage_per_station(usage_probs):
+    return (
+        usage_probs
+        .sort("probability", descending=True)
+        .group_by("station")
+        .head(1)
+        .select(["station", "usage_type", "probability"])
+    )
+
+
+def label_deltas_with_usage(delta_df, usage_probs):
+    dom = dominant_usage_per_station(usage_probs)
+
+    return (
+        delta_df
+        .join(dom, on="station", how="left")
+    )

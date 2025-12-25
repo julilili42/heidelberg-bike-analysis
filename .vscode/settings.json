@@ -1,3 +1,6 @@
 {
-    "jupyter.notebookFileRoot": "${workspaceFolder}"
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "python-envs.defaultEnvManager": "ms-python.python:venv",
+    "python-envs.defaultPackageManager": "ms-python.python:pip",
+    "python-envs.pythonProjects": []
 }
