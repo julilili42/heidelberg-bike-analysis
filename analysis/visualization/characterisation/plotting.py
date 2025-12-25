@@ -880,3 +880,26 @@ def plot_usage_entropy(
     plt.grid(axis="y", alpha=0.3)
     plt.tight_layout()
     plt.show()
+
+
+
+def plot_weather_response(
+    df_resp,
+    *,
+    xlabel,
+    title,
+    y_label="Relative change (vs baseline)",
+):
+    plt.figure(figsize=(6,4))
+
+    for usage in ["recreational", "mixed", "utilitarian"]:
+        d = df_resp.filter(pl.col("usage_type") == usage)
+        plt.plot(d["var_bin"], d["mean_delta"], marker="o", label=usage)
+
+    plt.xlabel(xlabel)
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.legend(frameon=False)
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.show()
