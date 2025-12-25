@@ -42,3 +42,88 @@ def compute_weather_deltas(
         })
 
     return pl.DataFrame(rows)
+
+
+
+
+
+def weather_response_df(
+    loader,
+    sample_rate="1h",
+    channel="channels_all",
+    min_obs=500,
+):
+    rows = []
+
+    for station in loader.get_bicyle_stations():
+        df = loader.get_bicycle_with_weather(
+            station_name=station,
+            sample_rate=sample_rate
+        )
+
+        if df.height < min_obs:
+            continue
+
+        rows.append(
+            df.select([
+                pl.lit(station).alias("station"),
+                "datetime",
+                pl.col(channel).alias("count"),
+                "temperature_2m",
+                "precipitation",
+                "wind_speed_10m",
+            ])
+        )
+
+    return pl.concat(rows)
+
+
+def weather_response_by_usage(
+    df,
+    var,                # "temperature_2m", "wind_speed_10m", "precipitation"
+    bin_width,
+    baseline_cond,      
+    min_var=None,
+    max_var=None,
+    min_obs=100,
+):
+    if min_var is not None:
+        df = df.filter(pl.col(var) >= min_var)
+    if max_var is not None:
+        df = df.filter(pl.col(var) <= max_var)
+
+    # bins
+    df = df.with_columns(
+        ((pl.col(var) / bin_width).floor() * bin_width)
+        .alias("var_bin")
+    )
+
+    baseline = (
+        df
+        .filter(baseline_cond)
+        .group_by("station")
+        .agg(pl.mean("count").alias("baseline_count"))
+    )
+
+    df = (
+        df
+        .join(baseline, on="station", how="left")
+        .with_columns(
+            (
+                (pl.col("count") - pl.col("baseline_count"))
+                / pl.col("baseline_count")
+            ).alias("delta_rel")
+        )
+        .drop_nulls()
+    )
+
+    return (
+        df
+        .group_by(["usage_type", "var_bin"])
+        .agg([
+            pl.mean("delta_rel").alias("mean_delta"),
+            pl.len().alias("n_obs"),
+        ])
+        .filter(pl.col("n_obs") >= min_obs)
+        .sort(["usage_type", "var_bin"])
+    )

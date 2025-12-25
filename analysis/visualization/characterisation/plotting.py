@@ -844,3 +844,62 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
     plt.grid(alpha=0.2)
     plt.tight_layout()
     plt.show()
+
+
+
+def plot_usage_entropy(
+    entropy_df,
+    entropy_col="entropy",
+    usage_col="usage_type",
+    figsize=(6, 4),
+    title="Usage entropy by dominant station type",
+):
+    plt.figure(figsize=figsize)
+
+    sns.boxplot(
+        data=entropy_df,
+        x=usage_col,
+        y=entropy_col,
+        showfliers=False,
+        width=0.5,
+    )
+
+    sns.stripplot(
+        data=entropy_df,
+        x=usage_col,
+        y=entropy_col,
+        color="black",
+        size=5,
+        jitter=0.2,
+        alpha=0.8,
+    )
+
+    plt.xlabel("Dominant usage type")
+    plt.ylabel("Usage entropy")
+    plt.title(title)
+    plt.grid(axis="y", alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+
+
+def plot_weather_response(
+    df_resp,
+    *,
+    xlabel,
+    title,
+    y_label="Relative change (vs baseline)",
+):
+    plt.figure(figsize=(6,4))
+
+    for usage in ["recreational", "mixed", "utilitarian"]:
+        d = df_resp.filter(pl.col("usage_type") == usage)
+        plt.plot(d["var_bin"], d["mean_delta"], marker="o", label=usage)
+
+    plt.xlabel(xlabel)
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.legend(frameon=False)
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.show()

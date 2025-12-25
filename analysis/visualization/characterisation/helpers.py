@@ -66,3 +66,17 @@ def label_deltas_with_usage(delta_df, usage_probs):
         delta_df
         .join(dom, on="station", how="left")
     )
+
+
+
+def entropy(usage_probs):
+    return (
+        usage_probs
+        .with_columns(
+            (-pl.col("probability") * pl.col("probability").log())
+            .alias("entropy_term")
+        )
+        .group_by("station")
+        .agg(pl.sum("entropy_term").alias("entropy"))
+        .sort("entropy")
+    )
