@@ -737,12 +737,15 @@ def plot_cluster_probabilities_ci(
 
     y = np.arange(len(stations))
 
+    xerr_lo = np.clip(p - lo, 0, None)
+    xerr_hi = np.clip(hi - p, 0, None)
+
     plt.figure(figsize=(6, max(3, figsize_scale * len(stations))))
 
     plt.errorbar(
         p,
         y,
-        xerr=[p - lo, hi - p],
+        xerr=[xerr_lo, xerr_hi],
         fmt="o",
         color="black",
         ecolor="gray",
