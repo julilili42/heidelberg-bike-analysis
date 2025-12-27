@@ -906,3 +906,25 @@ def plot_weather_response(
     plt.grid(alpha=0.3)
     plt.tight_layout()
     plt.show()
+
+
+def plot_utilitarian_spline(
+    x,
+    y,
+    x_fit,
+    y_fit,
+    title="Impact of holidays on utilitarian score of stations",
+):
+    plt.figure(figsize=(6, 4))
+    plt.scatter(x, y, alpha=0.8)
+    plt.plot(x_fit, y_fit, color="black", lw=2, label="Optimal spline")
+
+    plt.axhline(0, color="gray", ls="--", alpha=0.6)
+    plt.xlabel("Baseline utilitarian score")
+    plt.ylabel("Utilitarian score change")
+    plt.title(title)
+    plt.legend(frameon=False)
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+    

@@ -1,36 +1,33 @@
 import polars as pl
-from analysis.visualization.characterisation.features import calc_feature_vector
+from analysis.visualization.characterisation.event_utils import get_baseline_event_features, utilitarian_score 
 
 def compute_holiday_deltas(loader):
     intervals = loader.get_all_holiday_intervals(school_vacation=False)
     rows = []
 
     for station in loader.get_bicyle_stations():
-        baseline = calc_feature_vector(
-            loader=loader,
-            station_name=station,
-            neg_dates=True
-        )
-        holiday = calc_feature_vector(
-            loader=loader,
-            station_name=station,
-            filter_dates=intervals
+        base, hol = get_baseline_event_features(
+            loader,
+            station,
+            event_intervals=intervals,
         )
 
-        if baseline is None or holiday is None:
+        if base is None or hol is None:
             continue
 
-        row = {"station": station}
+        U_base = utilitarian_score(base)
+        U_hol  = utilitarian_score(hol)
 
-        if "DPI" in baseline and "DPI" in holiday:
-            row["ΔDPI"] = holiday["DPI"] - baseline["DPI"]
+        rows.append({
+            "station": station,
+            
+            "U_base": U_base,
+            "U_event": U_hol,
+            "ΔU": U_hol - U_base,
 
-        if "WSD" in baseline and "WSD" in holiday:
-            row["ΔWSD"] = holiday["WSD"] - baseline["WSD"]
-
-        if len(row) > 1:  
-            rows.append(row)
+            "ΔDPI": hol["DPI"] - base["DPI"],
+            "ΔWSD": hol["WSD"] - base["WSD"],
+            "ΔSDI": hol["SDI"] - base["SDI"],  
+        })
 
     return pl.DataFrame(rows)
-
-

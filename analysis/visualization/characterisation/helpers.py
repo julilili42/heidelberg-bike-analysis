@@ -1,6 +1,9 @@
 import polars as pl
 import numpy as np
 from scipy.stats import norm
+from scipy.interpolate import UnivariateSpline
+from sklearn.model_selection import KFold
+from sklearn.metrics import mean_squared_error
 
 def find_peak(Ih, hour_min, hour_max):
     w = Ih.filter((pl.col("hour") >= hour_min) & (pl.col("hour") < hour_max))
@@ -80,3 +83,42 @@ def entropy(usage_probs):
         .agg(pl.sum("entropy_term").alias("entropy"))
         .sort("entropy")
     )
+
+
+def fit_optimal_spline(
+    x,
+    y,
+    s_values=None,
+    k=3,
+    n_splits=5,
+):
+    order = np.argsort(x)
+    x = x[order]
+    y = y[order]
+
+    if s_values is None:
+        s_values = np.logspace(-4, 1, 40) * len(x)
+
+    best_s = None
+    best_mse = np.inf
+
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=0)
+
+    for s in s_values:
+        mses = []
+
+        for train, test in kf.split(x):
+            spline = UnivariateSpline(x[train], y[train], s=s, k=k)
+            y_pred = spline(x[test])
+            mses.append(mean_squared_error(y[test], y_pred))
+
+        mse = np.mean(mses)
+
+        if mse < best_mse:
+            best_mse = mse
+            best_s = s
+
+    spline = UnivariateSpline(x, y, s=best_s, k=k)
+
+    return spline, best_s, best_mse
+
