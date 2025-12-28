@@ -9,6 +9,8 @@ from analysis.visualization.characterisation.indices import (
     daily_index,
     monthly_index,
 )
+from analysis.visualization.characterisation.event import compute_event_deltas
+from analysis.visualization.characterisation.helpers import fit_optimal_spline
 import polars as pl
 import seaborn as sns
 import numpy as np
@@ -771,8 +773,8 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
             "recreational": "green",
         }
 
-    has_dpi = "ΔDPI" in delta_labeled.columns
-    has_wsd = "ΔWSD" in delta_labeled.columns
+    has_dpi = "DPI_delta" in delta_labeled.columns
+    has_wsd = "WSD_delta" in delta_labeled.columns
 
     if not (has_dpi or has_wsd):
         raise ValueError("No holiday delta features available for plotting")
@@ -780,8 +782,8 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
     plt.figure(figsize=(6, 5))
 
     for (utype,), df_u in delta_labeled.group_by("usage_type"):
-        x = df_u["ΔDPI"] if has_dpi else np.zeros(df_u.height)
-        y = df_u["ΔWSD"] if has_wsd else np.zeros(df_u.height)
+        x = df_u["DPI_delta"] if has_dpi else np.zeros(df_u.height)
+        y = df_u["WSD_delta"] if has_wsd else np.zeros(df_u.height)
 
         plt.scatter(
             x,
@@ -796,12 +798,12 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
     if show_centers:
         agg_exprs = []
         if has_dpi:
-            agg_exprs.append(pl.median("ΔDPI").alias("x"))
+            agg_exprs.append(pl.median("DPI_delta").alias("x"))
         else:
             agg_exprs.append(pl.lit(0.0).alias("x"))
 
         if has_wsd:
-            agg_exprs.append(pl.median("ΔWSD").alias("y"))
+            agg_exprs.append(pl.median("WSD_delta").alias("y"))
         else:
             agg_exprs.append(pl.lit(0.0).alias("y"))
 
@@ -913,7 +915,7 @@ def plot_utilitarian_spline(
     y,
     x_fit,
     y_fit,
-    title="Impact of holidays on utilitarian score of stations",
+    title
 ):
     plt.figure(figsize=(6, 4))
     plt.scatter(x, y, alpha=0.8)
@@ -928,3 +930,46 @@ def plot_utilitarian_spline(
     plt.tight_layout()
     plt.show()
     
+
+
+def plot_event_utilitarian_spline(
+    loader,
+    intervals,
+    title,
+    k=2,
+):
+    delta_raw = compute_event_deltas(
+        loader=loader,
+        intervals=intervals
+    )
+
+    if delta_raw.is_empty():
+        print(f"No valid stations for event: {title}")
+        return None
+
+    delta_df = (
+        delta_raw
+        .select(["station", "U_base", "U_event", "U_delta"])
+        .drop_nulls()
+    )
+
+    x = delta_df["U_base"].to_numpy()
+    y = delta_df["U_delta"].to_numpy()
+
+    spline, s_opt, mse_opt = fit_optimal_spline(x, y, k=k)
+    x_fit = np.linspace(x.min(), x.max(), 200)
+    y_fit = spline(x_fit)
+
+    plot_utilitarian_spline(
+        x=x,
+        y=y,
+        x_fit=x_fit,
+        y_fit=y_fit,
+        title=title,
+    )
+
+    return {
+        "n_stations": delta_df.height,
+        "s_opt": s_opt,
+        "mse": mse_opt,
+    }
