@@ -40,14 +40,7 @@ def kmeans_clustering(features, k):
     )
 
 
-def cluster_until_with_centroids(loader, k, start, end, mode, window_months, min_stations=5):
-    interval = make_interval(
-        start=start,
-        end=end,
-        mode=mode,
-        window_months=window_months,
-    )
-
+def cluster_until_with_centroids(loader, k, interval, min_stations=5):
     features = build_feature_df(loader, interval)
     features_valid = features.filter(pl.col("valid") == True)
 
@@ -69,14 +62,28 @@ def cluster_timeseries_usage(loader, k, start, end, mode, window_months, feature
     rows = []
 
     for d in dates:
+        interval = make_interval(
+            start=start,
+            end=d,
+            mode=mode,
+            window_months=window_months,
+        )
+
+        if interval is None:
+            continue
+        
+        start_month_interval = interval[0]
+        end_month_interval = interval[0]
+
+        print(f"Perform Clustering in Interval {start_month_interval} until {end_month_interval}")
+
+
         out = cluster_until_with_centroids(
             loader=loader,
             k=k,
-            mode=mode,
-            window_months=window_months,
-            start=start,
-            end=d
+            interval=interval
         )
+
         if out is None:
             continue
 
@@ -114,14 +121,21 @@ def monthly_dates(start, end):
 
 
 def make_interval(start, end, mode, window_months):
+    start_date = date.fromisoformat(start)
+
     if mode == "cumulative":
         return (start, end.isoformat())
+
     elif mode == "sliding":
-        start = end - relativedelta(months=window_months)
-        return (start.isoformat(), end.isoformat())
+        window_start = end - relativedelta(months=window_months)
+
+        if window_start < start_date:
+            return None
+
+        return (window_start.isoformat(), end.isoformat())
+
     else:
         raise ValueError("mode must be 'cumulative' or 'sliding'")
-    
 
 
 def usage_probabilities(df_usage, alpha=0.05):

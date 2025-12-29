@@ -62,6 +62,9 @@ def calc_feature_vector(
     dpi = double_peak_index(Ih=Ih_weekday)
     wsd = weekend_shape_diff_index(Ih_wd=Ih_weekday, Ih_we=Ih_weekend)
     sdi = seasonal_drop_index(Im=Im)
+    
+    if dpi is None or wsd is None or sdi is None:
+        return None
 
     return {"DPI": dpi, "WSD": wsd, "SDI": sdi}
 
@@ -70,8 +73,12 @@ def calc_feature_vector(
 
 
 def seasonal_drop_index(Im):
-    q90 = Im["I_m"].quantile(0.9)
     q10 = Im["I_m"].quantile(0.1)
+    q90 = Im["I_m"].quantile(0.9)
+
+    if q90 is None or q90 <= 0:
+        return None
+    
     return (q90 - q10) / q90
 
 
@@ -79,12 +86,14 @@ def double_peak_index(Ih):
     h_m, p_m = find_peak(Ih, 5, 10)  # first peak
     h_e, p_e = find_peak(Ih, 14, 20)  # second peak
 
-    midday = (
-        Ih.filter((pl.col("hour") >= 8) & (pl.col("hour") < 14))
-        .select(pl.mean("I_h"))
-        .item()
-    )
-
+    midday_df = Ih.filter((pl.col("hour") >= 8) & (pl.col("hour") < 14))
+    if midday_df.height == 0:
+        return None
+    
+    midday = midday_df.select(pl.mean("I_h")).item()
+    if midday is None:
+        return None
+    
     strength = ((p_m - midday) + (p_e - midday)) / 2
     strength = max(strength, 0)
 
@@ -97,8 +106,15 @@ def double_peak_index(Ih):
 
 
 def weekend_shape_diff_index(Ih_wd, Ih_we):
+    if Ih_wd is None or Ih_we is None:
+        return None
+    
     p_wd = Ih_wd["I_h"].to_numpy()
     p_we = Ih_we["I_h"].to_numpy()
+
+    if len(p_wd) != 24 or len(p_we) != 24:
+        return None
+    
 
     p_wd = p_wd / p_wd.sum()
     p_we = p_we / p_we.sum()
