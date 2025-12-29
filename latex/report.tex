@@ -174,20 +174,22 @@ Locally recorded meteorological data from the counting stations were excluded du
 
 
 \subsection{Holiday Data}
+Public holidays and school vacation periods were included to model calendar effects on bicycle traffic.
+Holiday data for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien_api}, providing start and end dates for public holidays and school vacations.
+\todo{Data quality: Add measures that had to be taken to clean up dataset}
 
-
-\begin{itemize}
-    \item Weather data, 
-    \item Why we need this, Station data is bad, describing fetching, here we name the source
-    \item OPTIONAL: Give comparision plot between temperatures and bad metrics as rain PLOT: WEATHERDATA
-\end{itemize}
-\begin{itemize}
-    \item Accident data? Not used, but need to include it
-\end{itemize}
-\begin{itemize}
-    \item Holiday data,
-    \item We we need it, describe source, also name that there were some errors in the dataset, we have to be careful, ...
-\end{itemize}
+%\begin{itemize}
+%    \item Weather data, 
+%    \item Why we need this, Station data is bad, describing fetching, here we name the source
+%    \item OPTIONAL: Give comparision plot between temperatures and bad metrics as rain PLOT: WEATHERDATA
+%\end{itemize}
+%\begin{itemize}
+%    \item Accident data? Not used, but need to include it
+%\end{itemize}
+%\begin{itemize}
+%    \item Holiday data,
+%    \item We we need it, describe source, also name that there were some errors in the dataset, we have to be careful, ...
+%\end{itemize}
 \section{Method}\label{sec:methods}
 Previous works often rely on predefined rules to categorize bicycle traffic \citep{american_bike_patterns}. However, such an approach may fail to capture hybrid usage patterns.
 We propose a more data-driven, implicit approach. By extracting features that quantify the 'shape' of daily, weekly, and seasonal profiles,
