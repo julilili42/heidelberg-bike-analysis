@@ -117,36 +117,24 @@
 \section{Data}\label{sec:data}
 The analysis relies on a combination of traffic, weather, and calendar datasets. In the following, we describe the acquisition, processing, and quality assessment of the cyclist data.
 
-\subsection{Cyclist Counting Network}
-We analyze continuous hourly cyclist counts from 15 permanent monitoring stations in Heidelberg. The dataset covers the period from May 2014 to the end of 2024. The data is physically collected using \textbf{Eco-Counter} systems equipped with \textbf{ZELT inductive loops} \cite{ecocounter_zelt}. These loops are embedded in the pavement and differentiate between cyclists and motorized vehicles based on electromagnetic signatures. Most stations record traffic separately for each direction (``Inbound'' vs.\ ``Outbound''), which allows for a detailed analysis of commuting flows.
+\subsection{Bicycle Counting Data}
+The bicycle counting stations in Heidelberg are densely and centrally distributed across the urban area. For our analysis, hourly bicycle counts from 15 permanent monitoring stations installed between May 2014 and January 2020 were used.
+The stations record counts at an hourly resolution using Eco-Counter systems equipped with ZELT inductive loops \cite{ecocounter_zelt}.
+These inductive loops are embedded in the pavement and detect cyclists based on characteristic electromagnetic signatures.
+Most stations are capable of recording directional flows (inbound and outbound).
 
-\paragraph{Acquisition and Geography.}
-We retrieved the data from the \textbf{MobiData BW} \cite{mobidatabw_api} open data platform. Using a custom Python script, we programmatically fetched and merged the raw CSV files, applying a spatial filter to extract only stations within the administrative domain of Heidelberg.(Maybe rein) Although the raw data includes meteorological fields, we excluded them due to sensor inconsistencies and relied on official weather records instead.
+The counting data is publicly available via the MobiData BW open data platform \cite{mobidatabw_api}.
+Although the counting station records include locally measured meteorological fields, these were excluded after comparison with official weather data revealed inconsistencies.
+City-wide weather conditions were assumed to be sufficiently homogeneous at the city scale.
 
-Heidelberg's central topography is predominantly flat, which facilitates a high modal share of cycling. The counting stations are located at critical bottlenecks and key corridors (see Figure \ref{fig:map}). The most important sensors are situated on the Neckar bridges, specifically the \textbf{Ernst-Walz-Brücke} and the \textbf{Theodor-Heuss-Brücke}, in \ref{fig:map} marked red. These locations capture the main traffic volume commuting between the university campus (\emph{Im Neuenheimer Feld}) and the city center.
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=1.0\columnwidth]{img/maps.png}
-    \caption{Geographical distribution of bicycle counting stations in Heidelberg. The core network along the Neckar river captures the majority of commuter traffic, while peripheral stations monitor local routes.}
-    \label{fig:map}
-\end{figure}
-
-\paragraph{Data Sanity.}
-To ensure the validity of our results, we performed a longitudinal quality check. We checked for two main issues: temporal gaps (missing hours) and ``false zeros'' (days with a total count of zero, indicating sensor failure).
-The data quality varies significantly between stations. Figure 2 shows a visualization of data availability over the entire 11-year period. Blue cells indicate valid data, while white cells represent either missing hours or false-zero days. 
+Data quality was assessed with respect to missing hourly observations and false-zero days, defined as days with a total recorded count of zero.
+\todo{Data sanity of counting data}
 
 
-\begin{itemize}
-    \item \textbf{High Reliability:} The core network is extremely stable. The \emph{Ernst-Walz-Brücke} recorded only 12 missing hours over the entire 11-year period and had zero false-zero days. This makes it an ideal baseline for long-term trend analysis.
-    \item \textbf{Sensor Failures:} In contrast, peripheral stations like \emph{Mannheimer Straße} (621 zero-days) or \emph{Schlierbacher Landstraße} (large data gaps) showed significant hardware issues. Consequently, we excluded these unstable stations from our longitudinal analysis to avoid statistical bias. (noch nd sicher)
-\end{itemize}
+\subsection{Weather Data}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=1.0\columnwidth]{img/sanity heatmap.png}
-    \caption{Data quality heatmap for all counting stations over the analysis period. Blue cells indicate available data, while white cells represent missing hours or false-zero days. }
-\end{figure}
+\subsection{Holiday Data}
+
 
 \begin{itemize}
     \item Weather data, 
