@@ -92,7 +92,7 @@ def marker_size(p, s_min=50, s_max=500):
     return s_min + (p**2) * (s_max - s_min)
 
 
-def plot_station_map(gdf, city, zoom=0.6, shift_y=0.03):
+def plot_station_map(gdf, city, zoom=0.6, shift_x=0, shift_y=0):
     fig, ax = plt.subplots(figsize=(14, 9))
 
     # stations
@@ -115,7 +115,7 @@ def plot_station_map(gdf, city, zoom=0.6, shift_y=0.03):
 
     # extent
     xmin, ymin, xmax, ymax = city.total_bounds
-    x_center = (xmin + xmax) / 2
+    x_center = (xmin + xmax) / 2 + shift_x * (xmax - xmin)
     y_center = (ymin + ymax) / 2 + shift_y * (ymax - ymin)
     w = (xmax - xmin) * zoom / 2
     h = (ymax - ymin) * zoom / 2
@@ -186,7 +186,9 @@ def plot_bicycle_usage_map(
     loader,
     city_geojson_path,
     zoom=0.6,
-    shift_y=0.03,
+    shift_x=0.0,
+    shift_y=0.0,
+    scalebar=False,
     scalebar_km=3,
     scalebar_height_km=0.1,
     scalebar_location=(0.25, 0.01),
@@ -203,19 +205,21 @@ def plot_bicycle_usage_map(
         gdf,
         city,
         zoom=zoom,
+        shift_x=shift_x,
         shift_y=shift_y,
     )
 
     add_legends(ax)
 
-    add_scalebar(
-        ax,
-        y_center=y_center,
-        length_km=scalebar_km,
-        height_km=scalebar_height_km,
-        location=scalebar_location,
-        fontsize=scalebar_fontsize,
-    )
+    if scalebar:
+        add_scalebar(
+            ax,
+            y_center=y_center,
+            length_km=scalebar_km,
+            height_km=scalebar_height_km,
+            location=scalebar_location,
+            fontsize=scalebar_fontsize,
+        )
 
     plt.tight_layout()
 
