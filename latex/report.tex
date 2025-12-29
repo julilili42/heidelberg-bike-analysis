@@ -8,6 +8,8 @@
 \usepackage{graphicx}
 \usepackage{subfigure}
 \usepackage{booktabs} % for professional tables
+\usepackage{comment}
+
 
 \usepackage{tikz}
 % Corporate Design of the University of Tübingen
@@ -82,7 +84,7 @@
 
 % put your email addresses here. You can use initials to save space, 
 % DO USE YOUR UNIVERSITY EMAIL ADDRESS!
-\icmlcorrespondingauthor{JJ}{7167089julian-steffan.jurcevic@student.uni-tuebingen.de} 
+\icmlcorrespondingauthor{JJ}{julian-steffan.jurcevic@student.uni-tuebingen.de} 
 \icmlcorrespondingauthor{ME}{martin.eichler@student.uni-tuebingen.de}
 \icmlcorrespondingauthor{SR}{simon.rappenecker@student.uni-tuebingen.de}
 \icmlcorrespondingauthor{TE}{tarik.eker@student.uni-tuebingen.de}
@@ -99,24 +101,52 @@
 %\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
 \printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
 
+% \begin{itemize}
+% \item Describe topic
+% \item Data source (just heidelberg) and external Factors
+% \item sentence in one method
+% \item Results briefly
+% \end{itemize}
+
+
 \begin{abstract}
-\begin{itemize}
-    \item Desribe topic
-    \item Data source (just heidelberg) and external Factors
-    \item sentence in one method
-    \item Results briefly
-\end{itemize}
+This paper investigates the influence of weather conditions and public holidays on bicycle traffic at urban counting stations in Heidelberg, Germany.
+Using multi-year hourly data from 15 permanent monitoring stations, we identify station-specific usage patterns based on daily, weekly, and seasonal traffic profiles.
+Applying k-means clustering to interpretable features capturing commuting structure, weekday–weekend differences, and seasonality, we distinguish utilitarian, recreational, and mixed-use station types.
+% More specific when results are written down
+\todo{Make this more specific}
+Weather and holiday impact analyses reveal reduced bicycle demand during adverse conditions and increased demand during warm periods, with mixed-use stations exhibiting the strongest sensitivity to external factors.
 \end{abstract}
 
+
+%\begin{itemize}
+%    \item Short introduction, but more motivational, bicycle traffic more important over the years...
+%    \item Name what is interesting and why it matters
+%    \item Shortly introduce the data, and the main method
+%\end{itemize}
+
 \section{Introduction}\label{sec:intro}
-\begin{itemize}
-    \item Short introduction, but more motivational, bicycle traffic more important over the years...
-    \item Name what is interesting and why it matters
-    \item Shortly introduce the data, and the main method
-\end{itemize}
+Cycling demand in urban areas varies strongly across locations and over time.
+Previous studies have shown that bicycle traffic exhibits characteristic \emph{daily}, \emph{weekly}, and \emph{seasonal} patterns that reflect underlying trip purposes such as commuting or leisure travel \cite{american_bike_patterns}.
+
+External conditions play a key role in shaping cycling behaviour.
+Cycling demand is highly sensitive to weather: precipitation and low temperatures reduce cycling activity, while warm conditions increase usage \cite{liu2015_weather_mode_choice_sweden, rudloff2014_weather_transport_vienna}.
+These weather effects are heterogeneous, as frequent cyclists tend to be less affected by adverse conditions than occasional users \cite{heinen2011_day_to_day_bicycle}.
+Public holidays are associated with lower overall traffic volumes and changes in daily traffic patterns \cite{cools2007_holidays_traffic}.
+
+In parallel, cycling has gained increasing policy relevance.
+In Baden-Württemberg, long-term strategies explicitly promote cycling as a central component of sustainable urban mobility \cite{bw2016_radstrategie}, highlighting the need for data-driven analyses of cycling infrastructure usage.
+
+Against this background, we investigate how urban bicycle counting stations can be characterised using daily, weekly, and seasonal traffic patterns, and how weather conditions and public holidays affect cycling demand across usage types.
+Using multi-year hourly data from permanent counting stations in Heidelberg, we derive interpretable  features and apply unsupervised \emph{k}-means clustering to distinguish \emph{utilitarian}, \emph{recreational}, and \emph{mixed-use} stations and assess their sensitivity to external factors.
+
+
+
+
 
 \section{Data}\label{sec:data}
-The analysis relies on a combination of traffic, weather, and calendar datasets. In the following, we describe the acquisition, processing, and quality assessment of the cyclist data.
+The analysis is based on bicycle traffic counts complemented by weather and public holiday data.
+In the following, we describe the data sources, preprocessing steps, and quality checks.
 
 \subsection{Bicycle Counting Data}
 The bicycle counting stations in Heidelberg are densely and centrally distributed across the urban area. For our analysis, hourly bicycle counts from 15 permanent monitoring stations installed between May 2014 and January 2020 were used.
@@ -126,7 +156,7 @@ Most stations are capable of recording directional flows (inbound and outbound).
 
 The counting data is publicly available via the MobiData BW open data platform \cite{mobidatabw_api}.
 Data quality was assessed with respect to missing hourly observations and false-zero days, defined as days with a total recorded count of zero.
-\todo{Data quality of counting data}
+\todo{Data quality: Add quantitative meassures}
 
 
 \subsection{Weather Data}
