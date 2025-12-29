@@ -41,6 +41,7 @@
 % Attempt to make hyperref and algorithmic work together better:
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 
+
 \usepackage[accepted]{icml2025}
 
 % For theorems and such
@@ -124,14 +125,23 @@ These inductive loops are embedded in the pavement and detect cyclists based on 
 Most stations are capable of recording directional flows (inbound and outbound).
 
 The counting data is publicly available via the MobiData BW open data platform \cite{mobidatabw_api}.
-Although the counting station records include locally measured meteorological fields, these were excluded after comparison with official weather data revealed inconsistencies.
-City-wide weather conditions were assumed to be sufficiently homogeneous at the city scale.
-
 Data quality was assessed with respect to missing hourly observations and false-zero days, defined as days with a total recorded count of zero.
-\todo{Data sanity of counting data}
+\todo{Data quality of counting data}
 
 
 \subsection{Weather Data}
+Weather data were used as external factors influencing bicycle counts.
+
+Hourly weather data were obtained from the Open-Meteo API \cite{open_meteo_api}.
+The data cover the period from 2013 to 2024 \todo{2013 is not used, right?} and provides hourly weather information based on numerical weather models from national meteorological services.
+
+
+As nearly all bicycle counting stations in Heidelberg lie within the same Open-Meteo grid cell, a single city-wide hourly weather time series was used for all stations.
+
+Locally recorded meteorological data from the counting stations were excluded due to inconsistencies identified in comparison with official weather data.
+
+
+
 
 \subsection{Holiday Data}
 
