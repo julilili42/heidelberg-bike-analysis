@@ -6,16 +6,20 @@ def station_outage_rate(dl):
     rows = []
 
     for station in dl.get_bicyle_stations():
-        df = dl.get_bicycle(station_name=station,sample_rate="1h").df
+        bd = dl.get_bicycle(station_name=station, sample_rate="1h")
+        df = bd.df
 
         if df.is_empty():
             continue
         
-        dt = (df.select(pl.col("datetime")).unique().sort("datetime"))
-        start = dt.select(pl.col("datetime").min()).item()
-        end   = dt.select(pl.col("datetime").max()).item()
         
-        expected = pl.datetime_range(start=start,end=end,interval="1h",eager=True)
+
+        dt = (df.select(pl.col("datetime")).unique().sort("datetime"))        
+        start = bd.min_date()
+        end = bd.max_date()
+        
+
+        expected = pl.datetime_range(start=start, end=end, interval="1h", eager=True)
         
         missing_hours = (pl.DataFrame({"datetime": expected}).join(dt, on="datetime", how="anti").height)
         
