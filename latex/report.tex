@@ -153,43 +153,37 @@ Most stations are capable of recording directional flows (inbound and outbound).
 The counting data is publicly available via the MobiData BW open data platform \cite{mobidatabw_api}.
 
 \paragraph{Data Quality Assessment}
-Data quality was assessed using a composite quality score $Q \in [0, 100]$ that combines four normalized component scores:
-\begin{itemize}
-    \item \emph{Availability} $S_A$: Percentage of days with $\geq$12 hourly observations.
-    \item \emph{Continuity} $S_C$: Starts at 100 and decreases with each data gap. Critical gaps ($>$30 days) are penalized more heavily than short interruptions.
-    \item \emph{Temporal coverage} $S_T$: Increases linearly with observation duration, reaching 100 at five years.
-    \item \emph{Recency} $S_R$: Decreases linearly with time since last measurement, reaching 0 after one year of inactivity.
-\end{itemize}
-The composite score is the weighted sum $Q = 0.35 \cdot S_A + 0.25 \cdot S_C + 0.25 \cdot S_T + 0.15 \cdot S_R$, emphasizing availability as the most important factor.
 Days with fewer than 12 hourly records were classified as missing. Additionally, days with zero total counts at high-traffic stations (median $>$ 500 cyclists/day) were flagged as likely sensor failures.
 
-Table~\ref{tab:station_quality} summarizes the key quality metrics for all 15 stations, ranked by their composite quality score.
+Table~\ref{tab:station_quality} summarizes the key quality metrics for all 15 stations, ranked by data availability.
+The standard deviation (Std) quantifies day-to-day variability in bicycle counts, with higher values indicating stronger fluctuations due to weather, seasonality, or weekday effects.
+The 95\% confidence interval margin (CI) represents the uncertainty around the daily mean estimate; smaller values indicate more precise estimates, typically achieved through longer observation periods or lower variability.
 
 \begin{table}[ht]
 \centering
-\caption{Data quality and traffic statistics for Heidelberg bicycle counting stations, ranked by quality score. CI denotes the 95\% confidence interval margin for the daily mean.}
+\caption{Data quality and traffic statistics for Heidelberg bicycle counting stations, ranked by data availability.}
 \label{tab:station_quality}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}rlrrrrr@{}}
+\begin{tabular}{@{}rlrrrr@{}}
 \toprule
-\textbf{Rank} & \textbf{Station} & \textbf{Mean} & \textbf{Std} & \textbf{CI} & \textbf{Avail.} & \textbf{Score} \\
- & & \small{[bikes/d]} & & \small{[$\pm$]} & \small{[\%]} & \\
+\textbf{Rank} & \textbf{Station} & \textbf{Mean} & \textbf{Std} & \textbf{CI} & \textbf{Avail.} \\
+ & & \small{[bikes/d]} & & \small{[$\pm$]} & \small{[\%]} \\
 \midrule
-1  & Theodor-Heuss-Br. & 7902 & 2865 & 108 & 100.0 & 99.3 \\
-2  & Ernst-Walz-Br.    & 6179 & 3344 & 101 & 100.0 & 98.8 \\
-3  & Rohrbacher Str.   & 2426 & 1251 &  48 &  95.7 & 96.8 \\
-4  & Eppelheimer Str.  &  909 &  452 &  20 &  95.6 & 96.8 \\
-5  & Berliner Str.     &  705 &  245 &  11 &  92.3 & 94.7 \\
-6  & Kurfürstenanlage  & 1257 &  630 &  26 &  91.8 & 94.5 \\
-7  & Plöck             & 4180 & 1832 &  62 &  91.5 & 93.4 \\
-8  & Mannheimer Str.   & 1964 &  845 &  28 &  83.2 & 90.0 \\
-9  & Hardtstraße       & 1690 &  640 &  30 &  79.4 & 89.6 \\
-10 & Liebermannstr.    & 4101 & 1456 &  57 &  71.9 & 88.0 \\
-11 & Schlierb. Landstr.&  786 &  389 &  20 &  60.2 & 83.9 \\
-12 & Ernst-Walz-Br. alt& 3240 & 1517 &  75 &  99.9 & 81.3 \\
-13 & Gaisbergstraße    & 4239 & 1651 &  57 &  94.7 & 80.6 \\
-14 & Ziegelh. Landstr. &  872 &  389 &  20 &  58.3 & 76.8 \\
-15 & Bahnstadtprom.    & 2759 & 1203 &  67 &  63.7 & 73.8 \\
+1  & Theodor-Heuss-Br. & 7902 & 2865 & 108 & 100.0 \\
+2  & Ernst-Walz-Br.    & 6179 & 3344 & 101 & 100.0 \\
+3  & Ernst-Walz-Br. alt& 3240 & 1517 &  75 &  99.9 \\
+4  & Rohrbacher Str.   & 2426 & 1251 &  48 &  95.7 \\
+5  & Eppelheimer Str.  &  909 &  452 &  20 &  95.6 \\
+6  & Gaisbergstraße    & 4239 & 1651 &  57 &  94.7 \\
+7  & Berliner Str.     &  705 &  245 &  11 &  92.3 \\
+8  & Kurfürstenanlage  & 1257 &  630 &  26 &  91.8 \\
+9  & Plöck             & 4180 & 1832 &  62 &  91.5 \\
+10 & Mannheimer Str.   & 1964 &  845 &  28 &  83.2 \\
+11 & Hardtstraße       & 1690 &  640 &  30 &  79.4 \\
+12 & Liebermannstr.    & 4101 & 1456 &  57 &  71.9 \\
+13 & Bahnstadtprom.    & 2759 & 1203 &  67 &  63.7 \\
+14 & Schlierb. Landstr.&  786 &  389 &  20 &  60.2 \\
+15 & Ziegelh. Landstr. &  872 &  389 &  20 &  58.3 \\
 \bottomrule
 \end{tabular}%
 }
