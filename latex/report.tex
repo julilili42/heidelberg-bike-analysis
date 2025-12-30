@@ -96,10 +96,6 @@
 
 \vskip 0.3in
 ]
-% Footnote
-
-%\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
-\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
 
 % \begin{itemize}
 % \item Describe topic
@@ -126,21 +122,23 @@ Finally, we investigate the influence of external factors, such as weather and p
 %\end{itemize}
 
 \section{Introduction}\label{sec:intro}
-Cycling demand in urban areas varies strongly across locations and over time.
-Previous studies have shown that bicycle traffic exhibits characteristic \emph{daily}, \emph{weekly}, and \emph{seasonal} patterns that reflect underlying trip purposes such as commuting or leisure travel \cite{american_bike_patterns}.
-
-External conditions play a key role in shaping cycling behaviour.
-Cycling demand is highly sensitive to weather: precipitation and low temperatures reduce cycling activity, while warm conditions increase usage \cite{liu2015_weather_mode_choice_sweden, rudloff2014_weather_transport_vienna}.
-These weather effects are heterogeneous, as frequent cyclists tend to be less affected by adverse conditions than occasional users \cite{heinen2011_day_to_day_bicycle}.
-Public holidays are associated with lower overall traffic volumes and changes in daily traffic patterns \cite{cools2007_holidays_traffic}.
-
-In parallel, cycling has gained increasing policy relevance.
-In Baden-Württemberg, long-term strategies explicitly promote cycling as a central component of sustainable urban mobility \cite{bw2016_radstrategie}, highlighting the need for data-driven analyses of cycling infrastructure usage.
-
-Against this background, we investigate how urban bicycle counting stations can be characterised using daily, weekly, and seasonal traffic patterns, and how weather conditions and public holidays affect cycling demand across usage types.
-Using multi-year hourly data from permanent counting stations in Heidelberg, we derive interpretable features and apply unsupervised \emph{k}-means clustering to distinguish \emph{utilitarian}, \emph{recreational}, and \emph{mixed-use} stations and assess their sensitivity to external factors.
-
-
+Sustainable urban traffic relies heavily on the expansion of cycling. The state of Baden-Württemberg recognizes this, explicitly promoting cycling as a key component of its long-term strategy \cite{bw2016_radstrategie}. 
+To translate these strategies into infrastructure, planners require a good understanding of traffic behavior. Specifically, they need to know not just how many people are cycling, but when and why. \\ \\
+%
+Trip purposes are typically inferred from spatiotemporal traffic patterns. 
+While previous studies have successfully used hourly and daily counts to distinguish utilitarian from recreational traffic, 
+they often rely on rule-based approaches \cite{american_bike_patterns}. 
+These methods, however, struggle to capture hybrid usage patterns common in urban environments.  \\ \\
+%
+Furthermore, cycling demand is highly sensitive to external factors.
+Precipitation, temperature, and public holidays can influence traffic patterns \cite{liu2015_weather_mode_choice_sweden, rudloff2014_weather_transport_vienna, cools2007_holidays_traffic}. 
+Since commuters are more weather-resilient than leisure riders, these effects vary by station type \cite{heinen2011_day_to_day_bicycle}. 
+Therefore, we aim to understand how these factors influence the demand profiles of different station types in the city of Heidelberg, Germany.  \\ \\
+%
+To overcome the limitations of rule-based classification, we present a flexible, data-driven approach. 
+Using hourly counting data from 15 stations in Heidelberg \todo{Link Map}, we first derive features to quantify traffic shapes across daily, weekly, and seasonal timescales.
+We then apply $k$-means clustering to identify different usage patterns (\emph{utilitarian}, \emph{recreational}, and \emph{mixed})
+and analyze their sensitivity to weather and public holidays.
 
 \section{Data}\label{sec:data}
 The analysis is based on bicycle traffic counts complemented by weather and public holiday data.
@@ -156,7 +154,6 @@ The counting data is publicly available via the MobiData BW open data platform \
 Data quality was assessed with respect to missing hourly observations and false-zero days, defined as days with a total recorded count of zero.
 \todo{Data quality: Add quantitative meassures}
 
-
 \subsection{Weather Data}
 Weather data were used as external factors influencing bicycle counts.
 
@@ -167,9 +164,6 @@ The data cover the period from 2013 to 2024 \todo{2013 is not used, right?} and 
 As nearly all bicycle counting stations in Heidelberg lie within the same Open-Meteo grid cell, a single city-wide hourly weather time series was used for all stations.
 
 Locally recorded meteorological data from the counting stations were excluded due to inconsistencies identified in comparison with official weather data.
-
-
-
 
 \subsection{Holiday Data}
 Public holidays and school vacation periods were included to model calendar effects on bicycle traffic.
@@ -188,6 +182,7 @@ Holiday data for Baden-Württemberg were obtained from the Mehr Schulferien API 
 %    \item Holiday data,
 %    \item We we need it, describe source, also name that there were some errors in the dataset, we have to be careful, ...
 %\end{itemize}
+
 \section{Method}\label{sec:methods}
 Previous works often rely on predefined rules to categorize bicycle traffic \citep{american_bike_patterns}. However, such an approach may fail to capture hybrid usage patterns.
 We propose a more data-driven, implicit approach. By extracting features that quantify the 'shape' of daily, weekly, and seasonal profiles,
@@ -284,7 +279,11 @@ High values indicate strong seasonal variation, whereas low values correspond to
     \item statements that can be made
 \end{itemize}
 
-\newpage
+\clearpage
+
+% Footnote
+%\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
 
 \section*{Contribution Statement}
 Add this, see original template

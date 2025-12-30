@@ -92,8 +92,8 @@ def marker_size(p, s_min=50, s_max=500):
     return s_min + (p**2) * (s_max - s_min)
 
 
-def plot_station_map(gdf, city, zoom=0.6, shift_x=0, shift_y=0):
-    fig, ax = plt.subplots(figsize=(14, 9))
+def plot_station_map(gdf, city, zoom=0.6, shift_x=0, shift_y=0, figsize=(14,9)):
+    fig, ax = plt.subplots(figsize=figsize)
 
     # stations
     for usage, style in USAGE_STYLE.items():
@@ -195,7 +195,7 @@ def plot_bicycle_usage_map(
     scalebar_fontsize=14,
     save=False,
     outfile="station_usage_map.png",
-    dpi=800,
+    figsize=(14,9)
 ):
     gdf = build_station_geodataframe(usage_probs, loader)
 
@@ -207,6 +207,7 @@ def plot_bicycle_usage_map(
         zoom=zoom,
         shift_x=shift_x,
         shift_y=shift_y,
+        figsize=figsize
     )
 
     add_legends(ax)
@@ -226,7 +227,6 @@ def plot_bicycle_usage_map(
     if save:
         fig.savefig(
             outfile,
-            dpi=dpi,
             bbox_inches="tight",
         )
 
