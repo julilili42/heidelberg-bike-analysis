@@ -146,6 +146,7 @@ def plot_hourly_indices_all(
     title=None,
     filter_dates=None,
     neg_dates=False,
+    stations=None
 ):
     created_fig = False
     if ax is None:
@@ -155,7 +156,11 @@ def plot_hourly_indices_all(
     Ih_wd_all = []
     Ih_we_all = []
 
-    for station in loader.get_bicyle_stations():
+    if stations is None:
+        stations = loader.get_bicyle_stations()
+
+
+    for station in stations:
         Ih_wd = hourly_index(
             loader,
             station,
@@ -235,6 +240,7 @@ def plot_hourly_indices_all_subplots(
     title_2=None,
     filter_dates=None,
     neg_dates=False,
+    stations=None
 ):
 
     fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)
@@ -249,6 +255,7 @@ def plot_hourly_indices_all_subplots(
         title=title_1,
         neg_dates=neg_dates,
         filter_dates=filter_dates if neg_dates is True else None,
+        stations=stations
     )
     plot_hourly_indices_all(
         loader,
@@ -259,6 +266,7 @@ def plot_hourly_indices_all_subplots(
         ax=axes[1],
         title=title_2,
         filter_dates=filter_dates,
+        stations=stations
     )
 
     plt.tight_layout()
@@ -278,6 +286,7 @@ def plot_daily_indices(
     extra_title=None,
     filter_dates=None,
     neg_dates=False,
+    stations=None
 ):
     Id = daily_index(
         loader,
@@ -384,6 +393,7 @@ def plot_daily_indices_all(
     figsize=(8, 4),
     ylim=(0.3, 1.5),
     ax=None,
+    stations=None,
     # this is for holidays
     title=None,
     filter_dates=None,
@@ -396,7 +406,10 @@ def plot_daily_indices_all(
 
     Id_all = []
 
-    for station in loader.get_bicyle_stations():
+    if stations is None:
+        stations = loader.get_bicyle_stations()
+
+    for station in stations:
         Id = daily_index(
             loader,
             station,
@@ -460,6 +473,7 @@ def plot_daily_indices_all_subplots(
     title_2=None,
     filter_dates=None,
     neg_dates=False,
+    stations=None
 ):
     fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)
 
@@ -473,6 +487,7 @@ def plot_daily_indices_all_subplots(
         title=title_1,
         neg_dates=neg_dates,
         filter_dates=filter_dates if neg_dates is True else None,
+        stations=stations
     )
     plot_daily_indices_all(
         loader,
@@ -483,6 +498,7 @@ def plot_daily_indices_all_subplots(
         ax=axes[1],
         title=title_2,
         filter_dates=filter_dates,
+        stations=stations
     )
 
     plt.tight_layout()
@@ -569,7 +585,7 @@ def plot_monthly_indices(
 
 
 def plot_monthly_indices_all(
-    loader, channel="channels_all", interval=None, figsize=(8, 4), ylim=None, ax=None
+    loader, channel="channels_all", interval=None, figsize=(8, 4), ylim=None, ax=None, stations=None, title=None
 ):
     created_fig = False
     if ax is None:
@@ -578,8 +594,10 @@ def plot_monthly_indices_all(
 
     Im_all = []
 
+    if stations is None:
+        stations = loader.get_bicyle_stations()
     
-    for station in loader.get_bicyle_stations():
+    for station in stations:
         Im = monthly_index(loader, station, channel, interval=interval).sort("month")
         Im_all.append(Im)
 
@@ -639,7 +657,9 @@ def plot_monthly_indices_all(
 
     ax.set_xlabel("Month")
     ax.set_ylabel("Monthly index $I_m$")
-    ax.set_title("Monthly traffic indices across all stations")
+    ax.set_title(
+        "Daily traffic indices across all stations" if title is None else title
+    )
     ax.grid(alpha=0.3)
 
     if ylim is not None:
