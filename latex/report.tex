@@ -153,9 +153,15 @@ Most stations are capable of recording directional flows (inbound and outbound).
 The counting data is publicly available via the MobiData BW open data platform \cite{mobidatabw_api}.
 
 \paragraph{Data Quality Assessment}
-Data quality was assessed using a composite quality score that combines multiple metrics.
-For each station, we computed: (1) \emph{data availability}, defined as the percentage of days with at least 12 hourly observations; (2) \emph{continuity}, penalizing stations with frequent or prolonged data gaps; (3) \emph{temporal coverage}, rewarding longer observation periods; and (4) \emph{recency}, favoring stations with up-to-date measurements.
-Days with fewer than 12 hourly records were classified as missing. Additionally, days with zero total counts at high-traffic stations (median $>$ 500 cyclists/day) were flagged as sensor failures rather than genuine low-traffic days.
+Data quality was assessed using a composite quality score $Q \in [0, 100]$ that combines four normalized component scores:
+\begin{itemize}
+    \item \emph{Availability} $S_A$: Percentage of days with $\geq$12 hourly observations.
+    \item \emph{Continuity} $S_C$: Starts at 100 and decreases with each data gap. Critical gaps ($>$30 days) are penalized more heavily than short interruptions.
+    \item \emph{Temporal coverage} $S_T$: Increases linearly with observation duration, reaching 100 at five years.
+    \item \emph{Recency} $S_R$: Decreases linearly with time since last measurement, reaching 0 after one year of inactivity.
+\end{itemize}
+The composite score is the weighted sum $Q = 0.35 \cdot S_A + 0.25 \cdot S_C + 0.25 \cdot S_T + 0.15 \cdot S_R$, emphasizing availability as the most important factor.
+Days with fewer than 12 hourly records were classified as missing. Additionally, days with zero total counts at high-traffic stations (median $>$ 500 cyclists/day) were flagged as likely sensor failures.
 
 Table~\ref{tab:station_quality} summarizes the key quality metrics for all 15 stations, ranked by their composite quality score.
 
