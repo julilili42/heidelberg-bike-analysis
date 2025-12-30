@@ -85,6 +85,20 @@ def entropy(usage_probs):
     )
 
 
+def station_entropy_labels(usage_probs):
+    ent = (
+        entropy(usage_probs)
+        .with_row_index("idx")   
+        .select(["station", "idx"])
+    )
+
+    return {
+        row["station"]: f"S{row['idx'] + 1}"
+        for row in ent.iter_rows(named=True)
+    }
+
+
+
 def fit_optimal_spline(
     x,
     y,
