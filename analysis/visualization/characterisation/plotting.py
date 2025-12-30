@@ -10,7 +10,7 @@ from analysis.visualization.characterisation.indices import (
     monthly_index,
 )
 from analysis.visualization.characterisation.event import compute_event_deltas
-from analysis.visualization.characterisation.helpers import fit_optimal_spline
+from analysis.visualization.characterisation.helpers import fit_optimal_spline, entropy
 import polars as pl
 import seaborn as sns
 import numpy as np
@@ -142,11 +142,14 @@ def plot_hourly_indices_all(
     figsize=(10, 4),
     ylim=(0, 0.2),
     ax=None,
+    alpha=0.15,
+    grid_alpha=0.3,
     # this is for holidays
     title=None,
     filter_dates=None,
     neg_dates=False,
-    stations=None
+    stations=None,
+    save=False
 ):
     created_fig = False
     if ax is None:
@@ -184,8 +187,8 @@ def plot_hourly_indices_all(
         Ih_we_all.append(Ih_we)
 
         # individual stations (background)
-        ax.plot(Ih_wd["hour"], Ih_wd["I_h"], color=WD_COLOR, alpha=0.15, linewidth=1)
-        ax.plot(Ih_we["hour"], Ih_we["I_h"], color=WE_COLOR, alpha=0.15, linewidth=1)
+        ax.plot(Ih_wd["hour"], Ih_wd["I_h"], color=WD_COLOR, alpha=alpha, linewidth=1)
+        ax.plot(Ih_we["hour"], Ih_we["I_h"], color=WE_COLOR, alpha=alpha, linewidth=1)
 
     # mean profiles (foreground)
     wd_mean = (
@@ -216,6 +219,9 @@ def plot_hourly_indices_all(
         label="Weekend (mean)",
     )
 
+    ax.set_xlim(0, 23)
+    ax.set_xticks(range(0, 24, 3))
+
     ax.set_xlabel("Hour of day")
     ax.set_ylabel("Hourly index $I_h$")
     ax.set_title(
@@ -223,10 +229,12 @@ def plot_hourly_indices_all(
     )
     ax.set_ylim(ylim)
     ax.legend(frameon=False)
-    ax.grid(alpha=0.3)
+    ax.grid(alpha=grid_alpha)
 
     if created_fig:
         plt.tight_layout()
+        if save:        
+            plt.savefig("hourly_index", dpi=300, bbox_inches="tight")
         plt.show()
 
 
@@ -394,6 +402,7 @@ def plot_daily_indices_all(
     ylim=(0.3, 1.5),
     ax=None,
     stations=None,
+    alpha=0.25,
     # this is for holidays
     title=None,
     filter_dates=None,
@@ -424,11 +433,11 @@ def plot_daily_indices_all(
         y = Id["I_d"].to_numpy()
 
         # Mon–Fri
-        ax.plot(x[:5], y[:5], color=WD_COLOR, alpha=0.25, linewidth=1)
+        ax.plot(x[:5], y[:5], color=WD_COLOR, alpha=alpha, linewidth=1)
         # Fri–Sat
-        ax.plot(x[4:6], y[4:6], color=WD_COLOR, alpha=0.25, linewidth=1)
+        ax.plot(x[4:6], y[4:6], color=WD_COLOR, alpha=alpha, linewidth=1)
         # Sat–Sun
-        ax.plot(x[5:], y[5:], color=WE_COLOR, alpha=0.25, linewidth=1)
+        ax.plot(x[5:], y[5:], color=WE_COLOR, alpha=alpha, linewidth=1)
 
     # mean profile
     Id_mean = (
@@ -993,3 +1002,82 @@ def plot_event_utilitarian_spline(
         "s_opt": s_opt,
         "mse": mse_opt,
     }
+
+
+
+def plot_usage_probabilities_paper(
+    usage_probs: pl.DataFrame,
+    figsize=(6, 3),
+    savepath=None,
+):
+    # wide format
+    pivot = (
+        usage_probs
+        .pivot(index="station", columns="usage_type", values="probability")
+        .fill_null(0)
+    )
+
+    # ensure columns exist + order
+    for col in ["recreational", "mixed", "utilitarian"]:
+        if col not in pivot.columns:
+            pivot = pivot.with_columns(pl.lit(0).alias(col))
+
+    pivot = pivot.select(["station", "recreational", "mixed", "utilitarian"])
+
+    # use shared entropy() implementation
+    ent = entropy(usage_probs).select(["station", "entropy"])
+
+    pivot = (
+        pivot
+        .join(ent, on="station", how="left")
+        .sort("entropy")
+    )
+
+    # x-axis: S1..Sn
+    x = np.arange(pivot.height)
+
+    colors = {
+        "recreational": "#55A868",
+        "mixed": "#DD8452",
+        "utilitarian": "#4C72B0",
+    }
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    bottom = np.zeros(pivot.height)
+    for key in ["recreational", "mixed", "utilitarian"]:
+        vals = pivot[key].to_numpy()
+        ax.bar(
+            x, vals, bottom=bottom,
+            color=colors[key],
+            width=0.8,
+            label=key.capitalize(),
+            edgecolor="none",
+        )
+        bottom += vals
+
+    ax.set_ylim(0, 1)
+    ax.set_yticks([0, 0.5, 1.0])
+    ax.set_ylabel("Assignment probability")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"S{i+1}" for i in x], rotation=0)
+    ax.set_xlabel("Station (ordered by increasing entropy)")
+
+    ax.legend(
+        frameon=False,
+        ncol=3,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.25),
+    )
+
+    for spine in ["top", "right"]:
+        ax.spines[spine].set_visible(False)
+
+    plt.tight_layout()
+
+    if savepath is not None:
+        fig.savefig(savepath, dpi=300, bbox_inches="tight")  
+        plt.close(fig)
+    else:
+        plt.show()

@@ -9,6 +9,7 @@
 \usepackage{subfigure}
 \usepackage{booktabs} % for professional tables
 \usepackage{comment}
+\usepackage{tabularx}
 
 
 \usepackage{tikz}
@@ -289,6 +290,63 @@ High values indicate strong seasonal variation, whereas low values correspond to
 % \end{figure}
 
 \section{Results}\label{sec:results}
+\begin{table}[h!]
+\centering
+\label{tab:temperature_effect}
+\caption{Effect of temperature on station usage across usage types.}
+\small
+\begin{tabularx}{\linewidth}{l*{6}{c}}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Weekdays}} 
+ & \multicolumn{3}{c}{\textbf{Weekends}} \\
+\textbf{Type}
+ & $L$ & $\Delta_M$ & $\Delta_H$
+ & $L$ & $\Delta_M$ & $\Delta_H$ \\
+\midrule
+Mix        & 60.3 & 31\% & 72\% & 39.5 & 49\% & 116\% \\
+Rec & 43.2 & 18\% & 37\% & 33.4 & 26\% & 59\% \\
+Util  & 147.6 & 18\% & 43\% & 105.3 & 26\% & 65\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[h!]
+\centering
+
+\label{tab:precipitation_effect}
+\caption{Effect of precipitation on station usage across usage types.}
+\small
+\begin{tabularx}{\linewidth}{Xcccccc}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Weekdays}} 
+ & \multicolumn{3}{c}{\textbf{Weekends}} \\
+\textbf{Type}
+ & $L$ & $\Delta_M$ & $\Delta_H$
+ & $L$ & $\Delta_M$ & $\Delta_H$ \\
+\midrule
+Mix  & 87.5 & $-17$\% & $-37$\% & 66.3 & $-19$\% & $-46$\% \\
+Rec  & 62.9 & $-9$\%  & $-22$\% & 53.1 & $-12$\% & $-29$\% \\
+Util & 200.5 & $-8$\% & $-23$\% & 159.4 & $-13$\% & $-29$\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+\begin{figure}[h!]
+    \centering
+    \caption{todo}
+    \includegraphics[width=\columnwidth]{img/hourly_index.png}
+    \label{fig:hourly_index}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \caption{todo}
+    \includegraphics[width=\columnwidth]{img/clustering_prob.png}
+    \label{fig:clustering_prob}
+\end{figure}
+
+
 \begin{itemize}
     \item describe temporal shift, describe why this is expected and why, PLOT: city,
     \item describe holidays impact, describe behaviour (similar as weekend) PLOT: show shift
