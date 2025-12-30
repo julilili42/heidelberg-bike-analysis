@@ -1,57 +1,10 @@
 import polars as pl
 
-def compute_weather_deltas(
-    loader,
-    event_intervals,
-    weekday=None,
-    hours=None,
-    sample_rate="1h",
-    min_obs=24,
-    channel="channels_all",
-):
-    rows = []
-
-    for station in loader.get_bicyle_stations():
-        bd_event = (
-            loader.get_bicycle(station, sample_rate=sample_rate)
-            .filter_intervals(event_intervals)
-        )
-
-        bd_base = (
-            loader.get_bicycle(station, sample_rate=sample_rate)
-            .filter_intervals(event_intervals, negate=True)
-        )
-
-        if weekday is not None or hours is not None:
-            bd_event = bd_event.filter_time(weekday=weekday, time_frame=hours)
-            bd_base  = bd_base.filter_time(weekday=weekday, time_frame=hours)
-
-        df_event = bd_event.df
-        df_base  = bd_base.df
-
-        if df_event.height < min_obs or df_base.height < min_obs:
-            continue
-
-        mean_event = df_event[channel].mean()
-        mean_base  = df_base[channel].mean()
-
-        rows.append({
-            "station": station,
-            "delta_relative": (mean_event - mean_base) / mean_base,
-            "delta_absolute": mean_event - mean_base,
-        })
-
-    return pl.DataFrame(rows)
-
-
-
-
-
 def weather_response_df(
     loader,
-    sample_rate="1h",
+    sample_rate="1h",          
     channel="channels_all",
-    min_obs=500,
+    min_obs=200,
 ):
     rows = []
 
@@ -64,66 +17,115 @@ def weather_response_df(
         if df.height < min_obs:
             continue
 
-        rows.append(
-            df.select([
+        df_day = (
+            df
+            .with_columns(pl.col("datetime").dt.date().alias("date"))
+            .group_by("date")
+            .agg([
+                pl.col(channel).mean().alias("count"),            
+                pl.col("temperature_2m").max().alias("temp_max"),     
+                pl.col("precipitation").sum().alias("precip_sum"),
+                pl.col("wind_speed_10m").max().alias("wind_max"),
+            ])
+            .filter(pl.col("count").is_not_null() & (pl.col("count") > 0))
+            .with_columns(pl.col("date").cast(pl.Datetime).alias("datetime"))
+            .select([
                 pl.lit(station).alias("station"),
                 "datetime",
-                pl.col(channel).alias("count"),
-                "temperature_2m",
-                "precipitation",
-                "wind_speed_10m",
+                "count",
+                pl.col("temp_max"),
+                "precip_sum",
+                "wind_max",
             ])
         )
+
+        rows.append(df_day)
 
     return pl.concat(rows)
 
 
-def weather_response_by_usage(
+
+def reorder_lmh_columns(df):
+    fixed = ["usage_type", "day_type"]
+
+    mean_cols = [c for c in df.columns if c.startswith("mean_count_")]
+    diff_cols = [c for c in df.columns if c.startswith("rel_diff_")]
+
+    order = ["L", "M", "H"]
+
+    mean_cols = sorted(mean_cols, key=lambda c: order.index(c.split("_")[-1]))
+    diff_cols = sorted(diff_cols, key=lambda c: order.index(c.split("_")[-1]))
+
+    return df.select(fixed + mean_cols + diff_cols)
+
+
+def weather_effect_table(
     df,
-    var,                # "temperature_2m", "wind_speed_10m", "precipitation"
-    bin_width,
-    baseline_cond,      
-    min_var=None,
-    max_var=None,
-    min_obs=100,
+    range_col,
+    baseline_label="L",
 ):
-    if min_var is not None:
-        df = df.filter(pl.col(var) >= min_var)
-    if max_var is not None:
-        df = df.filter(pl.col(var) <= max_var)
-
-    # bins
-    df = df.with_columns(
-        ((pl.col(var) / bin_width).floor() * bin_width)
-        .alias("var_bin")
+    # mean count per station
+    station_means = (
+        df
+        .group_by(["station", "usage_type", "day_type", range_col])
+        .agg(pl.mean("count").alias("mean_count"))
     )
 
+    # baseline per station
     baseline = (
-        df
-        .filter(baseline_cond)
-        .group_by("station")
-        .agg(pl.mean("count").alias("baseline_count"))
-    )
-
-    df = (
-        df
-        .join(baseline, on="station", how="left")
-        .with_columns(
-            (
-                (pl.col("count") - pl.col("baseline_count"))
-                / pl.col("baseline_count")
-            ).alias("delta_rel")
-        )
-        .drop_nulls()
-    )
-
-    return (
-        df
-        .group_by(["usage_type", "var_bin"])
-        .agg([
-            pl.mean("delta_rel").alias("mean_delta"),
-            pl.len().alias("n_obs"),
+        station_means
+        .filter(pl.col(range_col) == baseline_label)
+        .select([
+            "station",
+            "usage_type",
+            "day_type",
+            pl.col("mean_count").alias("baseline_count")
         ])
-        .filter(pl.col("n_obs") >= min_obs)
-        .sort(["usage_type", "var_bin"])
     )
+
+    # relative change per station
+    station_rel = (
+        station_means
+        .join(
+            baseline,
+            on=["station", "usage_type", "day_type"],
+            how="inner"
+        )
+        .with_columns(
+            ((pl.col("mean_count") - pl.col("baseline_count"))
+             / pl.col("baseline_count"))
+            .alias("rel_diff")
+        )
+    )
+
+    # aggregate across stations
+    final_agg = (
+        station_rel
+        .group_by(["usage_type", "day_type", range_col])
+        .agg([
+            pl.median("mean_count").alias("mean_count"),
+            pl.median("rel_diff").alias("rel_diff"),
+        ])
+    )
+
+    # pivot to final table
+    final_table = (
+        final_agg
+        .pivot(
+            index=["usage_type", "day_type"],
+            columns=range_col,
+            values=["mean_count", "rel_diff"]
+        )
+        .sort(["usage_type", "day_type"])
+    )
+
+    # rel_diff → %
+    final_table = final_table.with_columns([
+        (pl.col(c) * 100).round(2).alias(c)
+        for c in final_table.columns
+        if c.startswith("rel_diff_")
+    ])
+
+    final_table = reorder_lmh_columns(final_table)
+
+    return final_table
