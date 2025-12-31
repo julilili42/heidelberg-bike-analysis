@@ -278,21 +278,22 @@ Low-condition days ($L$) serve as baseline, and relative changes in mean daily b
 \quad X \in \{M,H\}.
 \]
 
-
-\begin{table}[h!]
+\begin{table}[t]
 \centering
 \caption{Weather class definitions used for the event-based analysis.}
 \label{tab:weather_classes}
 \small
-\begin{tabularx}{\linewidth}{lcc}
+\begin{tabular}{c cc}
 \toprule
-\textbf{Class} & \textbf{Temperature} & \textbf{Precipitation} \\
+Class &
+$T_{\max}$ [$^\circ$C] &
+$P_{\text{day}}$ [mm] \\
 \midrule
-$L$ & $T_{\max} < 10^\circ\mathrm{C}$ & $P_{\text{day}} = 0~\mathrm{mm}$ \\
-$M$ & $10 \le T_{\max} < 20^\circ\mathrm{C}$ & $0 < P_{\text{day}} \le 5~\mathrm{mm}$ \\
-$H$ & $T_{\max} \ge 20^\circ\mathrm{C}$ & $P_{\text{day}} > 5~\mathrm{mm}$ \\
+$L$ & $< 10$        & $= 0$ \\
+$M$ & $[10,\,20)$   & $(0,\,5]$ \\
+$H$ & $\ge 20$      & $> 5$ \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{table}
 
 
