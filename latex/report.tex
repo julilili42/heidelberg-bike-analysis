@@ -270,24 +270,32 @@ the SDI is defined as
 \text{SDI} &= \frac{q_{90} - q_{10}}{q_{90}}
 \end{align*}
 High values indicate strong seasonal variation, whereas low values correspond to relatively stable, year-round usage.
-% This is the template for a figure from the original ICML submission pack. In lecture 10 we will discuss plotting in detail.
-% Refer to this lecture on how to include figures in this text.
-% 
-% \begin{figure}[ht]
-% \vskip 0.2in
-% \begin{center}
-% \centerline{\includegraphics[width=\columnwidth]{icml_numpapers}}
-% \caption{Historical locations and number of accepted papers for International
-% Machine Learning Conferences (ICML 1993 -- ICML 2008) and International
-% Workshops on Machine Learning (ML 1988 -- ML 1992). At the time this figure was
-% produced, the number of accepted papers for ICML 2008 was unknown and instead
-% estimated.}
-% \label{icml-historical}
-% \end{center}
-% \vskip -0.2in
-% \end{figure}
 
 \section{Results}\label{sec:results}
+Low-condition days ($L$) serve as baseline, and relative changes in mean daily bicycle counts are computed as
+\[
+\Delta_X = \frac{\bar{C}_X - \bar{C}_L}{\bar{C}_L} \times 100,
+\quad X \in \{M,H\}.
+\]
+
+
+\begin{table}[h!]
+\centering
+\caption{Weather class definitions used for the event-based analysis.}
+\label{tab:weather_classes}
+\small
+\begin{tabularx}{\linewidth}{lcc}
+\toprule
+\textbf{Class} & \textbf{Temperature} & \textbf{Precipitation} \\
+\midrule
+$L$ & $T_{\max} < 10^\circ\mathrm{C}$ & $P_{\text{day}} = 0~\mathrm{mm}$ \\
+$M$ & $10 \le T_{\max} < 20^\circ\mathrm{C}$ & $0 < P_{\text{day}} \le 5~\mathrm{mm}$ \\
+$H$ & $T_{\max} \ge 20^\circ\mathrm{C}$ & $P_{\text{day}} > 5~\mathrm{mm}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
 \begin{table}[h!]
 \centering
 \label{tab:temperature_effect}
@@ -301,20 +309,30 @@ High values indicate strong seasonal variation, whereas low values correspond to
  & $L$ & $\Delta_M$ & $\Delta_H$
  & $L$ & $\Delta_M$ & $\Delta_H$ \\
 \midrule
-Mix        & 60.3 & 31\% & 72\% & 39.5 & 49\% & 116\% \\
-Rec & 43.2 & 18\% & 37\% & 33.4 & 26\% & 59\% \\
-Util  & 147.6 & 18\% & 43\% & 105.3 & 26\% & 65\% \\
+Mix
+& 1447 & 31\% & 72\%
+& 948  & 49\% & 116\% \\
+
+Rec
+& 1034 & 17\% & 36\%
+& 801  & 26\% & 59\% \\
+
+Util
+& 3543 & 18\% & 43\%
+& 2525 & 26\% & 65\% \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
+
+
+
 \begin{table}[h!]
 \centering
-
 \label{tab:precipitation_effect}
 \caption{Effect of precipitation on station usage across usage types.}
 \small
-\begin{tabularx}{\linewidth}{Xcccccc}
+\begin{tabularx}{\linewidth}{l*{6}{c}}
 \toprule
  & \multicolumn{3}{c}{\textbf{Weekdays}} 
  & \multicolumn{3}{c}{\textbf{Weekends}} \\
@@ -322,12 +340,40 @@ Util  & 147.6 & 18\% & 43\% & 105.3 & 26\% & 65\% \\
  & $L$ & $\Delta_M$ & $\Delta_H$
  & $L$ & $\Delta_M$ & $\Delta_H$ \\
 \midrule
-Mix  & 87.5 & $-17$\% & $-37$\% & 66.3 & $-19$\% & $-46$\% \\
-Rec  & 62.9 & $-9$\%  & $-22$\% & 53.1 & $-12$\% & $-29$\% \\
-Util & 200.5 & $-8$\% & $-23$\% & 159.4 & $-13$\% & $-29$\% \\
+Mix
+& 2100 & $-17$\% & $-37$\%
+& 1587 & $-19$\% & $-46$\% \\
+
+Rec
+& 1510 & $-9$\%  & $-22$\%
+& 1275 & $-12$\% & $-29$\% \\
+
+Util
+& 4810 & $-8$\%  & $-23$\%
+& 3823 & $-13$\% & $-29$\% \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+\begin{table}[h!]
+\centering
+\label{tab:holiday_effect}
+\caption{Effect of public holidays on station usage across usage types.}
+\small
+\begin{tabularx}{\linewidth}{lccc}
+\toprule
+\textbf{Type}
+& No Holiday
+& Holiday
+& $\Delta_{\text{Holiday}}$ \\
+\midrule
+Mixed        & 1648 & 953  & $-28.6\%$ \\
+Recreational & 1260 & 728  & $-42.2\%$ \\
+Utilitarian  & 3238 & 2043 & $-42.8\%$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 
 
 \begin{figure}[h!]

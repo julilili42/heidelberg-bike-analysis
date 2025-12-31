@@ -1,6 +1,9 @@
 import polars as pl
 from analysis.visualization.characterisation.features import calc_feature_vector
 
+# event = {holiday, weather}
+
+
 def get_baseline_event_features(
     loader,
     station,
@@ -25,7 +28,6 @@ def get_baseline_event_features(
     return base, event
 
 
-# event = {holiday, weather}
 def compute_event_deltas(loader, intervals):
     rows = []
 
@@ -56,6 +58,67 @@ def compute_event_deltas(loader, intervals):
 
     return pl.DataFrame(rows)
 
+
+
+
+def event_effect_table(
+    df,
+    range_col,
+    baseline_label="L",
+    group_cols=("station", "usage_type"),
+    agg_cols=("usage_type",),
+):
+    station_means = (
+        df
+        .group_by([*group_cols, range_col])
+        .agg(pl.mean("count").alias("mean_count"))
+    )
+
+    baseline = (
+        station_means
+        .filter(pl.col(range_col) == baseline_label)
+        .select([
+            *group_cols,
+            pl.col("mean_count").alias("baseline_count")
+        ])
+    )
+
+    station_rel = (
+        station_means
+        .join(baseline, on=list(group_cols), how="inner")
+        .with_columns(
+            ((pl.col("mean_count") - pl.col("baseline_count"))
+             / pl.col("baseline_count"))
+            .alias("rel_diff")
+        )
+    )
+
+    final_agg = (
+        station_rel
+        .group_by([*agg_cols, range_col])
+        .agg([
+            pl.median("mean_count").alias("mean_count"),
+            pl.median("rel_diff").alias("rel_diff"),
+        ])
+    )
+
+    final_table = (
+        final_agg
+        .pivot(
+            index=list(agg_cols),
+            columns=range_col,
+            values=["mean_count", "rel_diff"]
+        )
+        .sort(list(agg_cols))
+    )
+
+    final_table = final_table.with_columns([
+        (pl.col(c) * 100).round(2).alias(c)
+        for c in final_table.columns
+        if c.startswith("rel_diff_")
+    ])
+
+    return final_table
 
 
 def utilitarian_score(feats):
