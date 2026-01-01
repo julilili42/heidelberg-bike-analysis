@@ -10,6 +10,7 @@
 \usepackage{booktabs} % for professional tables
 \usepackage{comment}
 \usepackage{tabularx}
+\usepackage{enumitem} % fix distance in itemize
 
 
 \usepackage{tikz}
@@ -204,25 +205,12 @@ Public holidays and school vacation periods were included to model calendar effe
 Holiday data for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien_api}, providing start and end dates for public holidays and school vacations.
 \todo{Data quality: Add measures that had to be taken to clean up dataset}
 
-%\begin{itemize}
-%    \item Weather data, 
-%    \item Why we need this, Station data is bad, describing fetching, here we name the source
-%    \item OPTIONAL: Give comparision plot between temperatures and bad metrics as rain PLOT: WEATHERDATA
-%\end{itemize}
-%\begin{itemize}
-%    \item Accident data? Not used, but need to include it
-%\end{itemize}
-%\begin{itemize}
-%    \item Holiday data,
-%    \item We we need it, describe source, also name that there were some errors in the dataset, we have to be careful, ...
-%\end{itemize}
-
 \section{Method}\label{sec:methods}
 Previous works often rely on predefined rules to categorize bicycle traffic \citep{american_bike_patterns}. However, such an approach may fail to capture hybrid usage patterns.
 We propose a more data-driven, implicit approach. By extracting features that quantify the 'shape' of daily, weekly, and seasonal profiles,
 we map each station into a multi-dimensional feature space. This allows us to use unsupervised k-means clustering \citep{kmeans} to discover different station types. \\ \\
 In a subsequent step in chapter \ref{sec:results}, we assign one of the following labels to each cluster (cf. Fig. \todo{Figure Patterns, Indices}):
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item \emph{Utilitarian}: Traffic showing strong commuting patterns, with two distinct peaks in traffic volume during the morning and afternoon hours.
     \item \emph{Recreational}: Traffic dominated by leisure activities. These locations exhibit a single peak in traffic volume around midday or early afternoon.
     \item \emph{Mixed}: Locations that serve a dual purpose, showing characteristics of both utilitarian and recreational usage.
@@ -270,8 +258,6 @@ the SDI is defined as
 \text{SDI} &= \frac{q_{90} - q_{10}}{q_{90}}
 \end{align*}
 High values indicate strong seasonal variation, whereas low values correspond to relatively stable, year-round usage.
-
-
 
 \subsection*{Temporal Clustering}\label{sec:clustering}
 To account for temporal variability in bicycle traffic, $k$-means clustering is performed on sliding two-year windows with monthly shifts. Feature vectors are recomputed separately for each window.
