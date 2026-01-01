@@ -271,6 +271,23 @@ the SDI is defined as
 \end{align*}
 High values indicate strong seasonal variation, whereas low values correspond to relatively stable, year-round usage.
 
+
+
+\subsection*{Temporal Clustering}\label{sec:clustering}
+To account for temporal variability in bicycle traffic, $k$-means clustering is performed on sliding two-year windows with monthly shifts. Feature vectors are recomputed separately for each window.
+
+For each station $s$ and usage type $u$, the empirical cluster membership probability is defined as
+\[
+P(u \mid s) = \frac{1}{N_s} \sum_{i=1}^{N_s} \mathbb{I}\bigl( c_i(s) = u \bigr),
+\]
+where $c_i(s)$ denotes the cluster assignment in the $i$-th run and $N_s$ the number of valid runs.
+
+Since $k$-means produces unlabeled partitions, cluster semantics are assigned post hoc by ordering clusters according to a centroid-level \emph{utilitarian score}
+\[
+\text{DPI} + \text{WSD} - \text{SDI},
+\]
+with lower scores labeled as \emph{recreational}, intermediate as \emph{mixed}, and higher as \emph{utilitarian}.
+
 \section{Results}\label{sec:results}
 Low-condition days ($L$) serve as baseline, and relative changes in mean daily bicycle counts are computed as
 \[
@@ -280,7 +297,8 @@ Low-condition days ($L$) serve as baseline, and relative changes in mean daily b
 
 \begin{table}[t]
 \centering
-\caption{Weather class definitions used for the event-based analysis.}
+\caption{Weather class definitions for the event-based analysis.}
+
 \label{tab:weather_classes}
 \small
 \begin{tabular}{c cc}
@@ -358,22 +376,24 @@ Util
 
 \begin{table}[h!]
 \centering
+\caption{Effect of public holidays on station usage by usage type.}
 \label{tab:holiday_effect}
-\caption{Effect of public holidays on station usage across usage types.}
 \small
-\begin{tabularx}{\linewidth}{lccc}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{tabularx}{\linewidth}{l C C C}
 \toprule
 \textbf{Type}
-& No Holiday
+& No holiday
 & Holiday
-& $\Delta_{\text{Holiday}}$ \\
+& $\Delta$ \\
 \midrule
-Mixed        & 1648 & 953  & $-28.6\%$ \\
-Recreational & 1260 & 728  & $-42.2\%$ \\
-Utilitarian  & 3238 & 2043 & $-42.8\%$ \\
+Mix        & 1648 &  953 & $-28.6\%$ \\
+Rec & 1260 &  728 & $-42.2\%$ \\
+Util  & 3238 & 2043 & $-42.8\%$ \\
 \bottomrule
 \end{tabularx}
 \end{table}
+\todo{Maybe calc delta of different holidays}
 
 
 
