@@ -12,8 +12,6 @@ def station_outage_rate(dl):
         if df.is_empty():
             continue
         
-        
-
         dt = (df.select(pl.col("datetime")).unique().sort("datetime"))        
         start = bd.min_date()
         end = bd.max_date()
