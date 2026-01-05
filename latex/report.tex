@@ -274,17 +274,17 @@ Since $k$-means produces unlabeled partitions, cluster semantics are assigned po
 \]
 with lower scores labeled as \emph{recreational}, intermediate as \emph{mixed}, and higher as \emph{utilitarian}.
 
-\section{Results}\label{sec:results}
-Low-condition days ($L$) serve as baseline, and relative changes in mean daily bicycle counts are computed as
+\subsection*{Weather and Event Class Definitions}
+For the event-based analysis, days were grouped into three classes based on temperature and precipitation (Table~\ref{tab:weather_classes}).
+
+Low-condition days ($L$) serve as baseline, and relative changes in mean daily bicycle counts for class $X \in \{M,H\}$ are computed as
 \[
 \Delta_X = \frac{\bar{C}_X - \bar{C}_L}{\bar{C}_L} \times 100,
-\quad X \in \{M,H\}.
 \]
 
-\begin{table}[t]
+\begin{table}[h!]
 \centering
 \caption{Weather class definitions for the event-based analysis.}
-
 \label{tab:weather_classes}
 \small
 \begin{tabular}{c cc}
@@ -301,10 +301,52 @@ $H$ & $\ge 20$      & $> 5$ \\
 \end{table}
 
 
+\section{Results}\label{sec:results}
+This section presents the results of the proposed clustering approach and analyzes the spatial distribution of station usage types as well as their sensitivity to external factors.
+\subsection{Station Usage Types and Spatial Structure}\label{sec:results_clustering}
+Figure~\ref{fig:clustering_prob} presents the probabilistic usage-type assignments. 
+Cluster labels correspond to the usage types defined in Section~\ref{sec:clustering} and are assigned based on the centroid-level utilitarian score.
+Some stations show near-deterministic assignments with low entropy (e.g., S1–S3), while others exhibit more balanced probabilities, indicating temporally variable usage.
+
+\begin{figure}[h!]
+    \centering
+    \caption{Probabilistic usage-type assignments of bicycle counting stations.}
+    \includegraphics[width=\columnwidth]{img/clustering_prob.png}
+    \label{fig:clustering_prob}
+\end{figure}
+
+In the following analysis, each station is assigned its dominant usage type, defined as the class with the highest assignment probability. 
+Figure~\ref{fig:station_map} visualizes the spatial distribution of stations by dominant usage type.
+
+\begin{figure}[h!]
+    \centering
+    \caption{
+    Spatial distribution of bicycle counting stations in Heidelberg. 
+    Marker color and shape indicate the dominant usage type. Marker size reflects the assignment probability of the dominant class.}
+    \includegraphics[width=\columnwidth]{img/station_usage_map.png}
+    \label{fig:station_map}
+\end{figure}
+
+Utilitarian stations are primarily located along major traffic corridors and key commuting links.
+For example, Ernst-Walz-Bridge (S10) serves as Heidelberg’s central river crossing, while Gaisbergstraße (S4) is a designated bicycle priority corridor intended to relieve bicycle traffic from the parallel Rohrbachstraße (S7) \cite{adfc_heidelberg_fahrradstrassen}.
+
+
+Mixed stations predominantly occur in transitional urban zones.
+Stations such as S5, S6, and S9 connect several residential districts to the city center and combine utilitarian demand with recreational usage due to their location along the Neckar river.
+Similarly, S13 is located along a corridor linking Kirchheim to the city center and bordering extensive green areas.
+
+
+Recreational stations are mainly located in areas with limited commuting relevance and high leisure appeal. For example, Plöck (S1) lies in Heidelberg’s historic old town near the Universitätsbibliothek Heidelberg and other university buildings. 
+This results in predominantly tourist- and student-oriented traffic with reduced utilitarian demand.
+
+
+\subsection{Impact of External Factors on Usage Types}\label{sec:results_external}
+We first examine the effects of weather conditions, followed by the impact of public holidays on station usage.
+
 \begin{table}[h!]
 \centering
-\label{tab:temperature_effect}
 \caption{Effect of temperature on station usage across usage types.}
+\label{tab:temperature_effect}
 \small
 \begin{tabularx}{\linewidth}{l*{6}{c}}
 \toprule
@@ -329,13 +371,17 @@ Util
 \end{tabularx}
 \end{table}
 
+Table~\ref{tab:temperature_effect} shows that bicycle traffic increases with rising temperatures across all usage types.
+The effect is most pronounced for mixed and recreational stations, particularly on weekends, where high-temperature days lead to increases exceeding 100\% relative to the low-temperature baseline.
+In contrast, utilitarian stations exhibit more moderate temperature sensitivity, consistent with weather-resilient commuting behavior.
+
 
 
 
 \begin{table}[h!]
 \centering
-\label{tab:precipitation_effect}
 \caption{Effect of precipitation on station usage across usage types.}
+\label{tab:precipitation_effect}
 \small
 \begin{tabularx}{\linewidth}{l*{6}{c}}
 \toprule
@@ -360,6 +406,11 @@ Util
 \end{tabularx}
 \end{table}
 
+Precipitation has a consistently negative effect on bicycle traffic for all station types (Table~\ref{tab:precipitation_effect}).
+Recreational and mixed stations show the strongest declines, particularly on weekends, whereas utilitarian stations are less affected.
+This asymmetry suggests that discretionary trips are more readily suppressed by adverse weather conditions than commuting trips.
+
+
 \begin{table}[h!]
 \centering
 \caption{Effect of public holidays on station usage by usage type.}
@@ -381,39 +432,20 @@ Util  & 3238 & 2043 & $-42.8\%$ \\
 \end{table}
 \todo{Maybe calc delta of different holidays}
 
+Public holidays substantially reduce bicycle traffic across all usage types (Table~\ref{tab:holiday_effect}).
+The strongest relative declines are observed for recreational and utilitarian stations, indicating a shift away from both leisure routines and regular commuting.
+Mixed stations exhibit a comparatively smaller reduction, reflecting their dual functional role.
+Overall, holiday effects resemble weekend-like demand patterns but with amplified reductions in total volume.
 
 
-\begin{figure}[h!]
-    \centering
-    \caption{todo}
-    \includegraphics[width=\columnwidth]{img/hourly_index.png}
-    \label{fig:hourly_index}
-\end{figure}
 
-\begin{figure}[h!]
-    \centering
-    \caption{todo}
-    \includegraphics[width=\columnwidth]{img/clustering_prob.png}
-    \label{fig:clustering_prob}
-\end{figure}
+%\begin{itemize}
+%    \item describe temporal shift, describe why this is expected and why, PLOT: city,
+%    \item describe holidays impact, describe behaviour (similar as weekend) PLOT: show shift
+%    \item include also plot of different public holidays (my own one), this is just to have a funny fact (Vater Tag) PLOT: funny plot, na werden zu viele plots
+%    \item describe weather impact, obvious PLOT: weather
+%\end{itemize}
 
-
-\begin{itemize}
-    \item describe temporal shift, describe why this is expected and why, PLOT: city,
-    \item describe holidays impact, describe behaviour (similar as weekend) PLOT: show shift
-    \item include also plot of different public holidays (my own one), this is just to have a funny fact (Vater Tag) PLOT: funny plot, na werden zu viele plots
-    \item describe weather impact, obvious PLOT: weather
-\end{itemize}
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\columnwidth]{img/station_usage_map.png}
-    \caption{
-    Spatial distribution of bicycle counting stations in Heidelberg.
-    Marker shape indicates the dominant usage type (utilitarian, recreational, mixed),
-    while marker size reflects the dominance probability.
-    }
-    \label{fig:station_map}
-\end{figure}
 
 \section{Conclusion}\label{sec:conclusion}
 \begin{itemize}
