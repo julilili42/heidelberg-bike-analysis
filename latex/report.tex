@@ -372,11 +372,8 @@ Util
 \end{table}
 
 Table~\ref{tab:temperature_effect} shows that bicycle traffic increases with rising temperatures across all usage types.
-The effect is most pronounced for mixed and recreational stations, particularly on weekends, where high-temperature days lead to increases exceeding 100\% relative to the low-temperature baseline.
-In contrast, utilitarian stations exhibit more moderate temperature sensitivity, consistent with weather-resilient commuting behavior.
-
-
-
+The strongest temperature sensitivity is observed for mixed stations, particularly on weekends, where high-temperature days lead to increases exceeding 100\% relative to the low-temperature baseline.
+Utilitarian stations show moderate increases, while recreational stations exhibit comparatively smaller relative gains.
 
 \begin{table}[h!]
 \centering
@@ -406,9 +403,15 @@ Util
 \end{tabularx}
 \end{table}
 
-Precipitation has a consistently negative effect on bicycle traffic for all station types (Table~\ref{tab:precipitation_effect}).
-Recreational and mixed stations show the strongest declines, particularly on weekends, whereas utilitarian stations are less affected.
-This asymmetry suggests that discretionary trips are more readily suppressed by adverse weather conditions than commuting trips.
+Precipitation has a consistently negative effect on bicycle traffic for all usage types (Table~\ref{tab:precipitation_effect}).
+Mixed stations exhibit the strongest declines, particularly on weekends.
+Recreational and utilitarian stations show similar, but less pronounced reductions.
+
+
+Overall, weather sensitivity varies by usage type and reflects underlying trip purposes.
+Utilitarian stations are dominated by weather-resilient commuting traffic, while mixed stations combine obligatory and discretionary trips and therefore exhibit stronger weather responses.
+
+
 
 
 \begin{table}[h!]
@@ -432,10 +435,20 @@ Util  & 3238 & 2043 & $-42.8\%$ \\
 \end{table}
 \todo{Maybe calc delta of different holidays}
 
-Public holidays substantially reduce bicycle traffic across all usage types (Table~\ref{tab:holiday_effect}).
-The strongest relative declines are observed for recreational and utilitarian stations, indicating a shift away from both leisure routines and regular commuting.
-Mixed stations exhibit a comparatively smaller reduction, reflecting their dual functional role.
-Overall, holiday effects resemble weekend-like demand patterns but with amplified reductions in total volume.
+Public holidays substantially reduce bicycle traffic across all usage types
+(Table~\ref{tab:holiday_effect}), with the strongest declines observed at
+recreational and utilitarian stations, while mixed stations are less affected.
+Beyond volume effects, holidays also alter traffic structure
+(Figure~\ref{fig:holiday_shape}): weekday commuting peaks weaken
+($\Delta$DPI $< 0$) and usage patterns shift toward weekend-like profiles
+($\Delta$WSD $< 0$), with heterogeneous responses across station types.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\columnwidth]{img/holiday_impact.png}
+    \caption{Holiday-induced structural changes in station usage.}
+    \label{fig:holiday_shape}
+\end{figure}
 
 
 
@@ -448,12 +461,19 @@ Overall, holiday effects resemble weekend-like demand patterns but with amplifie
 
 
 \section{Conclusion}\label{sec:conclusion}
-\begin{itemize}
-    \item summarize
-    \item limitations
-    \item problems
-    \item statements that can be made
-\end{itemize}
+This analysis identified distinct bicycle usage patterns across stations in Heidelberg and showed that their spatial distribution and sensitivity to external factors differ systematically.
+Utilitarian, recreational, and mixed stations respond differently to weather and public holidays, reflecting underlying trip purposes.
+Overall, the results highlight that urban bicycle demand cannot be captured by traffic volume alone, but requires consideration of temporal usage patterns and contextual influences.
+
+
+
+
+%\begin{itemize}
+%    \item summarize
+%    \item limitations
+%    \item problems
+%    \item statements that can be made
+%\end{itemize}
 
 \clearpage
 

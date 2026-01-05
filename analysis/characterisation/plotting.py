@@ -792,14 +792,14 @@ def plot_cluster_probabilities_ci(
     plt.tight_layout()
     plt.show()
 
+    
 
-
-def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
+def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True, savepath=None):
     if color_map is None:
         color_map = {
-            "utilitarian": "red",
-            "mixed": "orange",
-            "recreational": "green",
+            "recreational": "#55A868",
+            "mixed": "#DD8452",
+            "utilitarian": "#4C72B0",
         }
 
     has_dpi = "DPI_delta" in delta_labeled.columns
@@ -815,9 +815,7 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
         y = df_u["WSD_delta"] if has_wsd else np.zeros(df_u.height)
 
         plt.scatter(
-            x,
-            y,
-            label=utype,
+            x, y,
             color=color_map.get(utype, "gray"),
             alpha=0.8,
             edgecolors="black",
@@ -825,58 +823,43 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True):
         )
 
     if show_centers:
-        agg_exprs = []
-        if has_dpi:
-            agg_exprs.append(pl.median("DPI_delta").alias("x"))
-        else:
-            agg_exprs.append(pl.lit(0.0).alias("x"))
-
-        if has_wsd:
-            agg_exprs.append(pl.median("WSD_delta").alias("y"))
-        else:
-            agg_exprs.append(pl.lit(0.0).alias("y"))
-
         centers = (
             delta_labeled
             .group_by("usage_type")
-            .agg(agg_exprs)
+            .agg([
+                pl.median("DPI_delta").alias("x") if has_dpi else pl.lit(0.0).alias("x"),
+                pl.median("WSD_delta").alias("y") if has_wsd else pl.lit(0.0).alias("y"),
+            ])
         )
 
         for row in centers.iter_rows(named=True):
-            utype = row["usage_type"]
             plt.scatter(
-                row["x"],
-                row["y"],
-                marker="X",
-                s=200,
-                color=color_map.get(utype, "gray"),
+                row["x"], row["y"],
+                marker="X", s=200,
+                color=color_map.get(row["usage_type"], "gray"),
                 edgecolors="black",
                 linewidths=1.5,
                 zorder=5,
             )
 
-    xlabel = "ΔDPI (change in weekday double-peak structure)" if has_dpi else ""
-    ylabel = "ΔWSD (change in weekday–weekend difference)" if has_wsd else ""
+    plt.xlabel("ΔDPI" if has_dpi else "")
+    plt.ylabel("ΔWSD" if has_wsd else "")
 
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title("Impact of public holidays on station dominant usage patterns")
-
-    handles, labels = plt.gca().get_legend_handles_labels()
-    handles.append(Line2D(
-        [0], [0],
-        marker="X",
-        color="w",
-        label="Median center",
+    median_handle = Line2D(
+        [0], [0], marker="X", color="w",
+        label="Group median",
         markerfacecolor="gray",
         markeredgecolor="black",
-        markersize=10,
-        linewidth=0
-    ))
-    plt.legend(handles=handles, frameon=False)
+        markersize=10, linewidth=0
+    )
+    plt.legend(handles=[median_handle], frameon=False)
 
     plt.grid(alpha=0.2)
     plt.tight_layout()
+
+    if savepath is not None:
+        plt.savefig(savepath, dpi=300, bbox_inches="tight")
+
     plt.show()
 
 
