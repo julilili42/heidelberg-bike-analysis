@@ -142,12 +142,11 @@ Therefore, we aim to understand how these factors influence the demand profiles 
 
 
 To overcome the limitations of rule-based classification, we present a flexible, data-driven approach. 
-Using hourly counting data from 15 stations in Heidelberg \todo{Link Map}, we first derive features to quantify traffic shapes across daily, weekly, and seasonal timescales.
+Using hourly counting data from 15 stations in Heidelberg (Figure~\ref{fig:station_map}), we first derive features to quantify traffic shapes across daily, weekly, and seasonal timescales.
 We then apply $k$-means clustering to identify different usage patterns (\emph{utilitarian}, \emph{recreational}, and \emph{mixed})
 and analyze their sensitivity to weather and public holidays.
 
 \section{Data}\label{sec:data}
-\todo{Rework section. Make it more precise and compact}
 The analysis is based on bicycle traffic counts complemented by weather and public holiday data.
 In the following, we describe the data sources, preprocessing steps, and quality checks.
 
@@ -198,7 +197,7 @@ Locally recorded weather data from the counting stations were excluded due to in
 
 
 \subsection{Holiday Data}
-Public holidays and school vacation periods for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien_api}.
+Public holidays and school vacation periods for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien}.
 \todo{Data quality: Add measures that had to be taken to clean up dataset}
 
 \section{Method}\label{sec:methods}
