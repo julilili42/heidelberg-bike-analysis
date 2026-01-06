@@ -124,31 +124,38 @@ Finally, we investigate the influence of external factors, such as weather and p
 %\end{itemize}
 
 \section{Introduction}\label{sec:intro}
-Sustainable urban traffic relies heavily on the expansion of cycling. The state of Baden-Württemberg recognizes this, explicitly promoting cycling as a key component of its long-term strategy \cite{bw2016_radstrategie}. 
-To translate these strategies into infrastructure, planners require a good understanding of traffic behavior. Specifically, they need to know not just how many people are cycling, but when and why. \\ \\
-%
+Sustainable urban traffic relies heavily on the expansion of cycling. 
+Both the state of Baden-Württemberg and the city of Heidelberg explicitly promote cycling as part of their long-term mobility strategies \cite{bw2016_radstrategie, heidelberg_radstrategie_2030}.
+To translate these strategies into infrastructure, planners require a good understanding of traffic behavior. Specifically, they need to know not just how many people are cycling, but when and why.
+
+
 Trip purposes are typically inferred from spatiotemporal traffic patterns. 
 While previous studies have successfully used hourly and daily counts to distinguish utilitarian from recreational traffic, 
 they often rely on rule-based approaches \cite{american_bike_patterns}. 
-These methods, however, struggle to capture hybrid usage patterns common in urban environments.  \\ \\
-%
+These methods, however, struggle to capture hybrid usage patterns common in urban environments.
+
+
 Furthermore, cycling demand is highly sensitive to external factors.
 Precipitation, temperature, and public holidays can influence traffic patterns \cite{liu2015_weather_mode_choice_sweden, rudloff2014_weather_transport_vienna, cools2007_holidays_traffic}. 
 Since commuters are more weather-resilient than leisure riders, these effects vary by station type \cite{heinen2011_day_to_day_bicycle}. 
-Therefore, we aim to understand how these factors influence the demand profiles of different station types in the city of Heidelberg, Germany.  \\ \\
-%
+Therefore, we aim to understand how these factors influence the demand profiles of different station types in the city of Heidelberg, Germany.
+
+
 To overcome the limitations of rule-based classification, we present a flexible, data-driven approach. 
 Using hourly counting data from 15 stations in Heidelberg \todo{Link Map}, we first derive features to quantify traffic shapes across daily, weekly, and seasonal timescales.
 We then apply $k$-means clustering to identify different usage patterns (\emph{utilitarian}, \emph{recreational}, and \emph{mixed})
 and analyze their sensitivity to weather and public holidays.
 
 \section{Data}\label{sec:data}
+\todo{Rework section. Make it more precise and compact}
 The analysis is based on bicycle traffic counts complemented by weather and public holiday data.
 In the following, we describe the data sources, preprocessing steps, and quality checks.
 
 \subsection{Bicycle Counting Data}
 The bicycle counting stations in Heidelberg are densely and centrally distributed across the urban area. For our analysis, hourly bicycle counts from 15 permanent monitoring stations installed between May 2014 and January 2020 were used.
+\todo{Figure out what time window of data was used in analysis}
 The stations record counts at an hourly resolution using Eco-Counter systems equipped with ZELT inductive loops \cite{ecocounter_zelt}.
+% this can be left out
 These inductive loops are embedded in the pavement and detect cyclists based on characteristic electromagnetic signatures.
 Most stations are capable of recording directional flows (inbound and outbound).
 
@@ -157,9 +164,9 @@ The counting data is publicly available via the MobiData BW open data platform \
 
 Data quality was assessed by treating days with fewer than 12 hourly observations as missing and by flagging zero-count days at high-traffic stations (median $>$ 500 cyclists/day) as probable sensor failures. 
 Table~\ref{tab:station_quality} reports data quality and traffic statistics for all 15 stations. Stations are identified by short IDs (S1–S15) and referenced consistently throughout the paper. The standard deviation (Std) captures day-to-day variability, while the 95\% confidence interval margin (CI) quantifies the uncertainty of the estimated daily mean.
+\todo{Needs to be reworked!}
 
-
-\begin{table}[ht]
+\begin{table}[t]
 \centering
 \caption{Data quality and traffic statistics for Heidelberg bicycle counting stations, ranked by data availability.}
 \label{tab:station_quality}
@@ -171,14 +178,14 @@ Table~\ref{tab:station_quality} reports data quality and traffic statistics for 
 \midrule
 S1  & Plöck             & 4180 & 1832 &  62 &  91.5 \\
 S2  & Kurfürstenanlage  & 1257 &  630 &  26 &  91.8 \\
-S3  & Ernst-Walz-Br.    & 6179 & 3344 & 101 & 100.0 \\
+S3  & Ernst-Walz-Brücke    & 6179 & 3344 & 101 & 100.0 \\
 S4  & Gaisbergstraße    & 4239 & 1651 &  57 &  94.7 \\
-S5 & Schlierb. Landstr.&  786 &  389 &  20 &  60.2 \\
-S6 & Ziegelh. Landstr. &  872 &  389 &  20 &  58.3 \\
+S5 & Schlierbacher Landstr.&  786 &  389 &  20 &  60.2 \\
+S6 & Ziegelhäuser Landstr. &  872 &  389 &  20 &  58.3 \\
 S7  & Rohrbacher Str.   & 2426 & 1251 &  48 &  95.7 \\
 S8  & Theodor-Heuss-Br. & 7902 & 2865 & 108 & 100.0 \\
 S9 & Mannheimer Str.   & 1964 &  845 &  28 &  83.2 \\
-S10  & Ernst-Walz-Br. alt& 3240 & 1517 &  75 &  99.9 \\
+S10  & Ernst-Walz-Brücke alt& 3240 & 1517 &  75 &  99.9 \\
 S11 & Hardtstraße       & 1690 &  640 &  30 &  79.4 \\
 S12  & Berliner Str.     &  705 &  245 &  11 &  92.3 \\
 S13 & Bahnstadtprom.    & 2759 & 1203 &  67 &  63.7 \\
@@ -195,7 +202,6 @@ Weather data were used as external factors influencing bicycle counts.
 Hourly weather data were obtained from the Open-Meteo API \cite{open_meteo_api}.
 The data cover the period from 2013 to 2024 \todo{2013 is not used, right?} and provides hourly weather information based on numerical weather models from national meteorological services.
 
-
 As nearly all bicycle counting stations in Heidelberg lie within the same Open-Meteo grid cell, a single city-wide hourly weather time series was used for all stations.
 
 Locally recorded meteorological data from the counting stations were excluded due to inconsistencies identified in comparison with official weather data.
@@ -208,7 +214,9 @@ Holiday data for Baden-Württemberg were obtained from the Mehr Schulferien API 
 \section{Method}\label{sec:methods}
 Previous works often rely on predefined rules to categorize bicycle traffic \citep{american_bike_patterns}. However, such an approach may fail to capture hybrid usage patterns.
 We propose a more data-driven, implicit approach. By extracting features that quantify the 'shape' of daily, weekly, and seasonal profiles,
-we map each station into a multi-dimensional feature space. This allows us to use unsupervised k-means clustering \citep{kmeans} to discover different station types. \\ \\
+we map each station into a multi-dimensional feature space. This allows us to use unsupervised k-means clustering \citep{kmeans} to discover different station types.
+
+
 In a subsequent step in chapter \ref{sec:results}, we assign one of the following labels to each cluster (cf. Fig. \todo{Figure Patterns, Indices}):
 \begin{itemize}[noitemsep]
     \item \emph{Utilitarian}: Traffic showing strong commuting patterns, with two distinct peaks in traffic volume during the morning and afternoon hours.
@@ -218,11 +226,17 @@ In a subsequent step in chapter \ref{sec:results}, we assign one of the followin
 % k-Means Features
 To characterise the counting stations, we derive three distinct features that capture traffic patterns across different timescales: daily, weekly and seasonal
 to exploit the distinct pattern visible in Figure xyz \todo{Figure pattern}.
+
+\todo{Explaination why these indices were choosen?}
+\todo{Explaination why k-means was chosen?}
+\todo{Explaination why k = 3 was chosen?}
 % DPI
 \subsection*{Double Peak Index (DPI)}\label{sec:dpi}
 Weekday hourly profiles of some stations exhibit a double-peak structure, typically associated with morning and evening commuting.
 The DPI quantifies this behaviour by identifying dominant morning (5–10 h) and evening (14–20 h) peaks and relating their magnitudes to the average midday level (8–14 h). 
-Stations with clear, balanced commuting peaks yield high DPI values, whereas flat or single-peak profiles result in low scores. \\ \\ 
+Stations with clear, balanced commuting peaks yield high DPI values, whereas flat or single-peak profiles result in low scores.
+
+
 Formally, let $p_m$ and $p_e$ denote the magnitudes of the morning and evening peaks at hours $h_m$ and $h_e$, and let $m$ be the average midday traffic level. The DPI is defined as
 \begin{align*}
     \text{DPI} &= \max\!\left( S \cdot Y \cdot D,\, 0 \right)
@@ -273,6 +287,7 @@ Since $k$-means produces unlabeled partitions, cluster semantics are assigned po
 \text{DPI} + \text{WSD} - \text{SDI},
 \]
 with lower scores labeled as \emph{recreational}, intermediate as \emph{mixed}, and higher as \emph{utilitarian}.
+\todo{This must be better defended. Why is this a good way?}
 
 \subsection*{Weather and Event Class Definitions}
 For the event-based analysis, days were grouped into three classes based on temperature and precipitation (Table~\ref{tab:weather_classes}).
@@ -282,7 +297,7 @@ Low-condition days ($L$) serve as baseline, and relative changes in mean daily b
 \Delta_X = \frac{\bar{C}_X - \bar{C}_L}{\bar{C}_L} \times 100,
 \]
 
-\begin{table}[h!]
+\begin{table}[t]
 \centering
 \caption{Weather class definitions for the event-based analysis.}
 \label{tab:weather_classes}
@@ -308,7 +323,7 @@ Figure~\ref{fig:clustering_prob} presents the probabilistic usage-type assignmen
 Cluster labels correspond to the usage types defined in Section~\ref{sec:clustering} and are assigned based on the centroid-level utilitarian score.
 Some stations show near-deterministic assignments with low entropy (e.g., S1–S3), while others exhibit more balanced probabilities, indicating temporally variable usage.
 
-\begin{figure}[h!]
+\begin{figure}[t]
     \centering
     \caption{Probabilistic usage-type assignments of bicycle counting stations.}
     \includegraphics[width=\columnwidth]{img/clustering_prob.png}
@@ -318,7 +333,7 @@ Some stations show near-deterministic assignments with low entropy (e.g., S1–S
 In the following analysis, each station is assigned its dominant usage type, defined as the class with the highest assignment probability. 
 Figure~\ref{fig:station_map} visualizes the spatial distribution of stations by dominant usage type.
 
-\begin{figure}[h!]
+\begin{figure}[t]
     \centering
     \caption{
     Spatial distribution of bicycle counting stations in Heidelberg. 
@@ -343,7 +358,7 @@ This results in predominantly tourist- and student-oriented traffic with reduced
 \subsection{Impact of External Factors on Usage Types}\label{sec:results_external}
 We first examine the effects of weather conditions, followed by the impact of public holidays on station usage.
 
-\begin{table}[h!]
+\begin{table}[t]
 \centering
 \caption{Effect of temperature on station usage across usage types.}
 \label{tab:temperature_effect}
@@ -375,7 +390,7 @@ Table~\ref{tab:temperature_effect} shows that bicycle traffic increases with ris
 The strongest temperature sensitivity is observed for mixed stations, particularly on weekends, where high-temperature days lead to increases exceeding 100\% relative to the low-temperature baseline.
 Utilitarian stations show moderate increases, while recreational stations exhibit comparatively smaller relative gains.
 
-\begin{table}[h!]
+\begin{table}[t]
 \centering
 \caption{Effect of precipitation on station usage across usage types.}
 \label{tab:precipitation_effect}
@@ -414,7 +429,7 @@ Utilitarian stations are dominated by weather-resilient commuting traffic, while
 
 
 
-\begin{table}[h!]
+\begin{table}[t]
 \centering
 \caption{Effect of public holidays on station usage by usage type.}
 \label{tab:holiday_effect}
@@ -443,7 +458,7 @@ Beyond volume effects, holidays also alter traffic structure
 ($\Delta$DPI $< 0$) and usage patterns shift toward weekend-like profiles
 ($\Delta$WSD $< 0$), with heterogeneous responses across station types.
 
-\begin{figure}[h!]
+\begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{img/holiday_impact.png}
     \caption{Holiday-induced structural changes in station usage.}
