@@ -795,6 +795,15 @@ def plot_cluster_probabilities_ci(
     
 
 def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True, savepath=None):
+    plt.rcParams.update({
+        "font.size": 13,
+        "axes.labelsize": 13,
+        "xtick.labelsize": 12,
+        "ytick.labelsize": 12,
+        "legend.fontsize": 13,
+    })
+
+
     if color_map is None:
         color_map = {
             "recreational": "#55A868",
@@ -842,6 +851,7 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True, savepa
                 zorder=5,
             )
 
+
     plt.xlabel("ΔDPI" if has_dpi else "")
     plt.ylabel("ΔWSD" if has_wsd else "")
 
@@ -850,9 +860,9 @@ def plot_holiday_impact(delta_labeled, color_map=None, show_centers=True, savepa
         label="Group median",
         markerfacecolor="gray",
         markeredgecolor="black",
-        markersize=10, linewidth=0
+        markersize=13, linewidth=0
     )
-    plt.legend(handles=[median_handle], frameon=False)
+    plt.legend(handles=[median_handle], frameon=False, fontsize=12)
 
     plt.grid(alpha=0.2)
     plt.tight_layout()
@@ -993,21 +1003,23 @@ def plot_usage_probabilities_paper(
     figsize=(6, 3),
     savepath=None,
 ):
-    # wide format
+    plt.rcParams.update({
+        "font.size": 12,
+        "legend.fontsize": 12,
+    })
+
     pivot = (
         usage_probs
         .pivot(index="station", columns="usage_type", values="probability")
         .fill_null(0)
     )
 
-    # ensure columns exist + order
     for col in ["recreational", "mixed", "utilitarian"]:
         if col not in pivot.columns:
             pivot = pivot.with_columns(pl.lit(0).alias(col))
 
     pivot = pivot.select(["station", "recreational", "mixed", "utilitarian"])
 
-    # use shared entropy() implementation
     ent = entropy(usage_probs).select(["station", "entropy"])
 
     pivot = (
@@ -1016,7 +1028,6 @@ def plot_usage_probabilities_paper(
         .sort("entropy")
     )
 
-    # x-axis: S1..Sn
     x = np.arange(pivot.height)
 
     colors = {
@@ -1060,7 +1071,8 @@ def plot_usage_probabilities_paper(
     plt.tight_layout()
 
     if savepath is not None:
-        fig.savefig(savepath, dpi=300, bbox_inches="tight")  
+        fig.savefig(savepath, dpi=300, bbox_inches="tight") 
+        plt.show() 
         plt.close(fig)
     else:
         plt.show()

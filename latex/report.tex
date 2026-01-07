@@ -35,6 +35,17 @@
 \definecolor{TUorange}{RGB}{210,150,0}
 \definecolor{TUbrown}{RGB}{145,105,70}
 
+
+% tighten figure spacing
+\setlength{\floatsep}{6pt}
+\setlength{\textfloatsep}{8pt}
+\setlength{\intextsep}{6pt}
+
+% tighten caption spacing
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{0pt}
+
+
 % hyperref makes hyperlinks in the resulting PDF.
 % If your build breaks (sometimes temporarily if a hyperlink spans a page)
 % please comment out the following usepackage line and replace
@@ -57,7 +68,8 @@
 % if you use cleveref..
 \usepackage[capitalize,noabbrev]{cleveref}
 
-\usepackage[textsize=tiny]{todonotes}
+% \usepackage[textsize=tiny]{todonotes}
+\usepackage[disable]{todonotes}
 
 
 % The \icmltitle you define below is probably too long as a header.
@@ -113,7 +125,9 @@ While previous studies have classified bicycle traffic, they often rely on prede
 Addressing this limitation, we present a data-driven approach to classify urban bicycle traffic using hourly data from counting stations in Heidelberg, Germany. 
 We derive special features to quantify the shape of traffic patterns across various timescales. 
 Subsequent $k$-means distinguishes distinct usage patterns: \emph{utilitarian}, \emph{recreational}, and \emph{mixed}.
-Finally, we investigate the influence of external factors, such as weather and public holidays, which varies significantly across different usage types.
+Finally, we investigate the influence of external factors, such as weather and public holidays, which varies significantly across different usage types. \footnote{Source files are publicly available in the \href{https://github.com/julilili42/datalit}{\textcolor{TUred}{project repository}}.}
+
+
 \end{abstract}
 
 
@@ -206,10 +220,10 @@ We propose a more data-driven, implicit approach. By extracting features that qu
 we map each station into a multi-dimensional feature space. This allows us to use unsupervised k-means clustering \citep{kmeans} to discover different usage types. 
 
 In a subsequent step in chapter \ref{sec:results}, we assign one of the following labels to each cluster:
-\begin{itemize}[noitemsep]
+\begin{itemize}[noitemsep, topsep=1pt]
     \item \emph{Utilitarian}: Traffic showing strong commuting patterns, with two distinct peaks in traffic volume during the morning and afternoon hours.
     \item \emph{Recreational}: Traffic dominated by leisure activities. These locations exhibit a single peak in traffic volume around midday or early afternoon.
-    \item \emph{Mixed}: Locations that serve a dual purpose, showing characteristics of both utilitarian and recreational usage.
+    \item \emph{Mixed}: Dual-purpose locations exhibiting both utilitarian and recreational characteristics.
 \end{itemize}
 % Why k = 3?
 The number of clusters was fixed to $k=3$ to explicitly reflect these three usage types.
@@ -221,7 +235,7 @@ to exploit the distinct pattern visible in Figure xyz \todo{Figure pattern}.
 
 \todo{Explaination why these indices were choosen?}
 % DPI
-\subsection*{Double Peak Index (DPI)}\label{sec:dpi}
+\paragraph{Double Peak Index (DPI)}
 Weekday hourly profiles of some stations exhibit a double-peak structure, typically associated with morning and evening commuting.
 The DPI quantifies this behaviour by identifying dominant morning (5–10 h) and evening (14–20 h) peaks and relating their magnitudes to the average midday level (8–14 h). 
 Stations with clear, balanced commuting peaks yield high DPI values, whereas flat or single-peak profiles result in low scores.
@@ -237,8 +251,8 @@ where $S$, $Y$ and $D$ models strength, symmetry and distance, respectively:
     Y &= 1 - \frac{|p_m - p_e|}{\max(p_m, p_e)} \\
     D &= \min\!\left(\frac{|h_e - h_m|}{10},\, 1\right)
 \end{align*}
-\subsection*{Weekend Shape Difference (WSD)}\label{sec:wsd}
 % WSD
+\paragraph{Weekend Shape Difference (WSD)} 
 Differences between weekday and weekend hourly traffic patterns provide an additional discriminator between usage types. To capture this effect, we compare the shape of the weekday and weekend hourly profiles.
 Let $\mathbf{p}^{wd}$ and $\mathbf{p}^{we}$ denote the weekday and weekend hourly profiles, normalised to sum to one.
 \begin{align*}
@@ -250,7 +264,7 @@ Let $\mathbf{p}^{wd}$ and $\mathbf{p}^{we}$ denote the weekday and weekend hourl
 \right\rVert_2
 \end{align*}
 % SDI
-\subsection*{Seasonal Drop Index (SDI)}\label{sec:sdi}
+\paragraph{Seasonal Drop Index (SDI)}
 Finally, we consider long-term patterns. Seasonality provides a discriminator between leisure and utilitarian-oriented stations. The SDI quantifies the relative decline between high and low-usage months.
 Let $I_m$ denote the monthly index values of a station. Using upper and lower quantiles to ensure robustness against outliers
 \begin{align*}
