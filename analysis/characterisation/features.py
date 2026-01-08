@@ -100,7 +100,7 @@ def double_peak_index(Ih):
     symmetry = 1 - abs(p_m - p_e) / max(p_m, p_e)
 
     distance = min(abs(h_e - h_m) / 10, 1.0)
-
+    
     score = strength * symmetry * distance
     return float(max(score, 0))
 

@@ -1,0 +1,666 @@
+import matplotlib.pyplot as plt
+import polars as pl
+from analysis.characterisation.features import (
+    weekend_shape_diff_index,
+    double_peak_index,
+    seasonal_drop_index,
+)
+from analysis.characterisation.indices import (
+    hourly_index,
+    daily_index,
+    monthly_index,
+)
+from analysis.characterisation.plotting.plot_style import WE_COLOR, WD_COLOR, WARM_COLOR, COLD_COLOR
+
+def plot_hourly_indices(
+    loader,
+    station_name,
+    channel="channels_all",
+    interval=None,
+    figsize=(10, 4),
+    ylim=(0, 0.2),
+    show_metrics=True,
+    ax=None,
+    # this is for holiday filtering
+    extra_title=None,
+    filter_dates=None,
+    neg_dates=False,
+):
+    created_fig = False
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    Ih_wd = hourly_index(
+        loader,
+        station_name,
+        channel=channel,
+        interval=interval,
+        weekday=True,
+        filter_dates=filter_dates,
+        neg_dates=neg_dates,
+    )
+    Ih_we = hourly_index(
+        loader,
+        station_name,
+        channel=channel,
+        interval=interval,
+        weekday=False,
+        filter_dates=filter_dates,
+        neg_dates=neg_dates,
+    )
+
+    ax.plot(Ih_wd["hour"], Ih_wd["I_h"], color=WD_COLOR, linewidth=2, label="Weekday")
+    ax.plot(Ih_we["hour"], Ih_we["I_h"], color=WE_COLOR, linewidth=2, label="Weekend")
+
+    ax.set_xlabel("Hour of day")
+    ax.set_ylabel("Hourly index $I_h$")
+    ax.set_ylim(ylim)
+    ax.grid(alpha=0.3)
+    ax.legend(frameon=False)
+
+    if show_metrics:
+        dpi = double_peak_index(Ih_wd)
+        diff = weekend_shape_diff_index(Ih_wd, Ih_we)
+
+        ax.set_title(
+            f"Daily traffic index – {station_name}{" " + extra_title if extra_title is not None else ""}\n"
+            f"DPI = {dpi:.2f}, Weekend shape diff = {diff:.2f}"
+        )
+    else:
+        ax.set_title(
+            f"Hourly traffic index – {station_name}{" " + extra_title if extra_title is not None else ""}"
+        )
+
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
+
+
+def plot_hourly_indices_subplots(
+    loader,
+    station_name,
+    channel="channels_all",
+    interval=None,
+    figsize=(18, 5),
+    ylim=(0, 0.2),
+    show_metrics=True,
+    title_1=None,
+    title_2=None,
+    filter_dates=None,
+    neg_dates=False,
+):
+    fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)
+
+    plot_hourly_indices(
+        loader,
+        station_name,
+        channel=channel,
+        interval=interval,
+        ylim=ylim,
+        show_metrics=show_metrics,
+        ax=axes[0],
+        extra_title=title_1,
+        neg_dates=neg_dates,
+        filter_dates=filter_dates if neg_dates is True else None,
+    )
+    plot_hourly_indices(
+        loader,
+        station_name,
+        channel=channel,
+        interval=interval,
+        ylim=ylim,
+        show_metrics=show_metrics,
+        ax=axes[1],
+        extra_title=title_2,
+        filter_dates=filter_dates,
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_hourly_indices_all(
+    loader,
+    channel="channels_all",
+    interval=None,
+    figsize=(10, 4),
+    ylim=(0, 0.2),
+    ax=None,
+    alpha=0.15,
+    grid_alpha=0.3,
+    # this is for holidays
+    title=None,
+    filter_dates=None,
+    neg_dates=False,
+    stations=None,
+    save=False
+):
+    created_fig = False
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    Ih_wd_all = []
+    Ih_we_all = []
+
+    if stations is None:
+        stations = loader.get_bicyle_stations()
+
+
+    for station in stations:
+        Ih_wd = hourly_index(
+            loader,
+            station,
+            channel,
+            interval,
+            weekday=True,
+            filter_dates=filter_dates,
+            neg_dates=neg_dates,
+        )
+        Ih_we = hourly_index(
+            loader,
+            station,
+            channel,
+            interval,
+            weekday=False,
+            filter_dates=filter_dates,
+            neg_dates=neg_dates,
+        )
+
+        Ih_wd_all.append(Ih_wd)
+        Ih_we_all.append(Ih_we)
+
+        # individual stations (background)
+        ax.plot(Ih_wd["hour"], Ih_wd["I_h"], color=WD_COLOR, alpha=alpha, linewidth=1)
+        ax.plot(Ih_we["hour"], Ih_we["I_h"], color=WE_COLOR, alpha=alpha, linewidth=1)
+
+    # mean profiles (foreground)
+    wd_mean = (
+        pl.concat(Ih_wd_all)
+        .group_by("hour")
+        .agg(pl.mean("I_h").alias("mean"))
+        .sort("hour")
+    )
+    we_mean = (
+        pl.concat(Ih_we_all)
+        .group_by("hour")
+        .agg(pl.mean("I_h").alias("mean"))
+        .sort("hour")
+    )
+
+    ax.plot(
+        wd_mean["hour"],
+        wd_mean["mean"],
+        color=WD_COLOR,
+        linewidth=2.5,
+        label="Weekday (mean)",
+    )
+    ax.plot(
+        we_mean["hour"],
+        we_mean["mean"],
+        color=WE_COLOR,
+        linewidth=2.5,
+        label="Weekend (mean)",
+    )
+
+    ax.set_xlim(0, 23)
+    ax.set_xticks(range(0, 24, 3))
+
+    ax.set_xlabel("Hour of day")
+    ax.set_ylabel("Hourly index $I_h$")
+    ax.set_title(
+        "Hourly traffic indices across all stations" if title is None else title
+    )
+    ax.set_ylim(ylim)
+    ax.legend(frameon=False)
+    ax.grid(alpha=grid_alpha)
+
+    if created_fig:
+        plt.tight_layout()
+        if save:        
+            plt.savefig("hourly_index", dpi=300, bbox_inches="tight")
+        plt.show()
+
+
+def plot_hourly_indices_all_subplots(
+    loader,
+    channel="channels_all",
+    interval=None,
+    figsize=(18, 5),
+    ylim=(0, 0.2),
+    title_1=None,
+    title_2=None,
+    filter_dates=None,
+    neg_dates=False,
+    stations=None
+):
+
+    fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)
+
+    plot_hourly_indices_all(
+        loader,
+        channel=channel,
+        interval=interval,
+        figsize=(figsize[0] // 2, figsize[1]),
+        ylim=ylim,
+        ax=axes[0],
+        title=title_1,
+        neg_dates=neg_dates,
+        filter_dates=filter_dates if neg_dates is True else None,
+        stations=stations
+    )
+    plot_hourly_indices_all(
+        loader,
+        channel=channel,
+        interval=interval,
+        figsize=(figsize[0] // 2, figsize[1]),
+        ylim=ylim,
+        ax=axes[1],
+        title=title_2,
+        filter_dates=filter_dates,
+        stations=stations
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_daily_indices(
+    loader,
+    station_name,
+    channel="channels_all",
+    interval=None,
+    figsize=(6, 3),
+    ylim=(0.5, 1.5),
+    show_metric=True,
+    ax=None,
+    # this part is for holiday analysis
+    extra_title=None,
+    filter_dates=None,
+    neg_dates=False,
+    stations=None
+):
+    Id = daily_index(
+        loader,
+        station_name,
+        channel,
+        interval=interval,
+        filter_dates=filter_dates,
+        neg_dates=neg_dates,
+    ).sort("weekday")
+
+    x = Id["weekday"].to_numpy()
+    y = Id["I_d"].to_numpy()
+
+    created_fig = False
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    # Mon–Fri
+    ax.plot(x[:5], y[:5], marker="o", linewidth=2, color=WD_COLOR, label="Weekday")
+    # Fri–Sat
+    ax.plot(x[4:6], y[4:6], marker="o", linewidth=2, color=WD_COLOR)
+    # Sat–Sun
+    ax.plot(x[5:], y[5:], marker="o", linewidth=2, color=WE_COLOR, label="Weekend")
+
+    ax.set_xticks(
+        ticks=range(1, 8), labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    )
+
+    ax.set_xlabel("Day of week")
+    ax.set_ylabel("Daily index $I_d$")
+    ax.set_ylim(ylim)
+    ax.grid(alpha=0.3)
+
+    if show_metric:
+        weekend_mean = Id.filter(pl.col("weekday") >= 6)["I_d"].mean()
+        weekday_mean = Id.filter(pl.col("weekday") <= 5)["I_d"].mean()
+        if weekend_mean is not None and weekday_mean is not None:
+            diff = weekday_mean - weekend_mean
+
+            ax.set_title(
+                f"Daily traffic index – {station_name}{" " + extra_title if extra_title is not None else ""}\n"
+                f"Weekday–Weekend diff = {diff:.2f}"
+            )
+    else:
+        ax.set_title(
+            f"Daily traffic index – {station_name}{" " + extra_title if extra_title is not None else ""}"
+        )
+
+    ax.legend(frameon=False)
+
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
+
+
+def plot_daily_indices_subplots(
+    loader,
+    station_name,
+    channel="channels_all",
+    interval=None,
+    figsize=(12, 4),
+    ylim=(0.5, 1.5),
+    show_metric=True,
+    title_1=None,
+    title_2=None,
+    filter_dates=None,
+    neg_dates=False,
+):
+    fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)
+
+    plot_daily_indices(
+        loader,
+        station_name,
+        channel=channel,
+        interval=interval,
+        ylim=ylim,
+        show_metric=show_metric,
+        ax=axes[0],
+        extra_title=title_1,
+        neg_dates=neg_dates,
+        filter_dates=filter_dates if neg_dates is True else None,
+    )
+    plot_daily_indices(
+        loader,
+        station_name,
+        channel=channel,
+        interval=interval,
+        ylim=ylim,
+        show_metric=show_metric,
+        ax=axes[1],
+        extra_title=title_2,
+        filter_dates=filter_dates,
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_daily_indices_all(
+    loader,
+    channel="channels_all",
+    interval=None,
+    figsize=(8, 4),
+    ylim=(0.3, 1.5),
+    ax=None,
+    stations=None,
+    alpha=0.25,
+    # this is for holidays
+    title=None,
+    filter_dates=None,
+    neg_dates=False,
+):
+    created_fig = False
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    Id_all = []
+
+    if stations is None:
+        stations = loader.get_bicyle_stations()
+
+    for station in stations:
+        Id = daily_index(
+            loader,
+            station,
+            channel,
+            interval=interval,
+            filter_dates=filter_dates,
+            neg_dates=neg_dates,
+        ).sort("weekday")
+        Id_all.append(Id)
+
+        x = Id["weekday"].to_numpy()
+        y = Id["I_d"].to_numpy()
+
+        # Mon–Fri
+        ax.plot(x[:5], y[:5], color=WD_COLOR, alpha=alpha, linewidth=1)
+        # Fri–Sat
+        ax.plot(x[4:6], y[4:6], color=WD_COLOR, alpha=alpha, linewidth=1)
+        # Sat–Sun
+        ax.plot(x[5:], y[5:], color=WE_COLOR, alpha=alpha, linewidth=1)
+
+    # mean profile
+    Id_mean = (
+        pl.concat(Id_all)
+        .group_by("weekday")
+        .agg(pl.mean("I_d").alias("mean"))
+        .sort("weekday")
+    )
+
+    x = Id_mean["weekday"].to_numpy()
+    y = Id_mean["mean"].to_numpy()
+
+    ax.plot(x[:5], y[:5], color=WD_COLOR, linewidth=3, label="Weekday (mean)")
+    ax.plot(x[4:6], y[4:6], color=WD_COLOR, linewidth=3)
+    ax.plot(x[5:], y[5:], color=WE_COLOR, linewidth=3, label="Weekend (mean)")
+
+    ax.set_xticks(
+        ticks=range(1, 8), labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    )
+
+    ax.set_xlabel("Day of week")
+    ax.set_ylabel("Daily index $I_d$")
+    ax.set_title(
+        "Daily traffic indices across all stations" if title is None else title
+    )
+    ax.set_ylim(ylim)
+    ax.legend(frameon=False)
+    ax.grid(alpha=0.3)
+
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
+
+
+def plot_daily_indices_all_subplots(
+    loader,
+    channel="channels_all",
+    interval=None,
+    figsize=(18, 5),
+    ylim=(0.3, 1.5),
+    title_1=None,
+    title_2=None,
+    filter_dates=None,
+    neg_dates=False,
+    stations=None
+):
+    fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)
+
+    plot_daily_indices_all(
+        loader,
+        channel=channel,
+        interval=interval,
+        figsize=(figsize[0] // 2, figsize[1]),
+        ylim=ylim,
+        ax=axes[0],
+        title=title_1,
+        neg_dates=neg_dates,
+        filter_dates=filter_dates if neg_dates is True else None,
+        stations=stations
+    )
+    plot_daily_indices_all(
+        loader,
+        channel=channel,
+        interval=interval,
+        figsize=(figsize[0] // 2, figsize[1]),
+        ylim=ylim,
+        ax=axes[1],
+        title=title_2,
+        filter_dates=filter_dates,
+        stations=stations
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_monthly_indices(
+    loader,
+    station_name,
+    channel="channels_all",
+    interval=None,
+    figsize=(6, 3),
+    ylim=None,
+    show_metric=True,
+    ax=None,
+):
+    Im = monthly_index(loader, station_name, channel, interval=interval).sort("month")
+
+    x = Im["month"].to_numpy()
+    y = Im["I_m"].to_numpy()
+
+    created_fig = False
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    # Cold season: Jan–Mar
+    ax.plot(
+        x[:3], y[:3], color=COLD_COLOR, marker="o", linewidth=2, label="Cold season"
+    )
+
+    # Transition Mar–Apr (keeps line continuous)
+    ax.plot(x[2:4], y[2:4], color=WARM_COLOR, marker="o", linewidth=2)
+
+    # Warm season: Apr–Oct
+    ax.plot(
+        x[3:10], y[3:10], color=WARM_COLOR, marker="o", linewidth=2, label="Warm season"
+    )
+
+    # Transition Oct–Nov
+    ax.plot(x[9:11], y[9:11], color=COLD_COLOR, marker="o", linewidth=2)
+
+    # Cold season: Nov–Dec
+    ax.plot(x[10:], y[10:], color=COLD_COLOR, marker="o", linewidth=2)
+
+    ax.set_xticks(
+        ticks=range(1, 13),
+        labels=[
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ],
+    )
+
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Monthly index $I_m$")
+    ax.grid(alpha=0.3)
+
+    if ylim is not None:
+        ax.set_ylim(ylim)
+
+    if show_metric:
+        drop = seasonal_drop_index(Im)
+        ax.set_title(
+            f"Monthly profile – {station_name}\n" f"Warm–Cold drop = {drop:.2f}"
+        )
+    else:
+        ax.set_title(f"Monthly profile – {station_name}")
+
+    ax.legend(frameon=False)
+
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
+
+
+def plot_monthly_indices_all(
+    loader, channel="channels_all", interval=None, figsize=(8, 4), ylim=None, ax=None, stations=None, title=None
+):
+    created_fig = False
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    Im_all = []
+
+    if stations is None:
+        stations = loader.get_bicyle_stations()
+    
+    for station in stations:
+        Im = monthly_index(loader, station, channel, interval=interval).sort("month")
+        Im_all.append(Im)
+
+        x = Im["month"].to_numpy()
+        y = Im["I_m"].to_numpy()
+
+        # Cold season: Jan–Mar
+        ax.plot(x[:3], y[:3], color=COLD_COLOR, alpha=0.25, linewidth=1)
+        # Transition Mar–Apr
+        ax.plot(x[2:4], y[2:4], color=WARM_COLOR, alpha=0.25, linewidth=1)
+        # Warm season: Apr–Oct
+        ax.plot(x[3:10], y[3:10], color=WARM_COLOR, alpha=0.25, linewidth=1)
+        # Transition Oct–Nov
+        ax.plot(x[9:11], y[9:11], color=COLD_COLOR, alpha=0.25, linewidth=1)
+        # Cold season: Nov–Dec
+        ax.plot(x[10:], y[10:], color=COLD_COLOR, alpha=0.25, linewidth=1)
+
+    # mean profile (foreground)
+    Im_mean = (
+        pl.concat(Im_all)
+        .group_by("month")
+        .agg(pl.mean("I_m").alias("mean"))
+        .sort("month")
+    )
+
+    x = Im_mean["month"].to_numpy()
+    y = Im_mean["mean"].to_numpy()
+
+    # Cold season mean
+    ax.plot(x[:3], y[:3], color=COLD_COLOR, linewidth=3, label="Cold season (mean)")
+    # Transition Mar–Apr
+    ax.plot(x[2:4], y[2:4], color=WARM_COLOR, linewidth=3)
+    # Warm season mean
+    ax.plot(x[3:10], y[3:10], color=WARM_COLOR, linewidth=3, label="Warm season (mean)")
+    # Transition Oct–Nov
+    ax.plot(x[9:11], y[9:11], color=COLD_COLOR, linewidth=3)
+    # Cold season mean
+    ax.plot(x[10:], y[10:], color=COLD_COLOR, linewidth=3)
+
+    ax.set_xticks(
+        ticks=range(1, 13),
+        labels=[
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ],
+    )
+
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Monthly index $I_m$")
+    ax.set_title(
+        "Daily traffic indices across all stations" if title is None else title
+    )
+    ax.grid(alpha=0.3)
+
+    if ylim is not None:
+        ax.set_ylim(ylim)
+
+    ax.legend(frameon=False)
+
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
