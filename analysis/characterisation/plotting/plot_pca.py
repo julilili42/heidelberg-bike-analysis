@@ -5,10 +5,10 @@ def plot_pca_clusters(
     df,
     pc1="PC1",
     pc2="PC2",
-    cluster_col="cluster_k",
+    cluster_col="cluster",
     label_col="station",
     annotate=True,
-    figsize=(6, 5),
+    figsize=(6, 6),
     alpha=0.85,
     point_size=80,
 ):
@@ -40,7 +40,6 @@ def plot_pca_clusters(
 
     plt.xlabel(pc1)
     plt.ylabel(pc2)
-    plt.title("PCA of station features")
     plt.legend(frameon=True)
     plt.grid(alpha=0.25)
     plt.tight_layout()

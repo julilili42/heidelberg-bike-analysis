@@ -3,7 +3,8 @@ import numpy as np
 import seaborn as sns
 from analysis.characterisation.helpers import entropy
 import polars as pl
-
+from analysis.characterisation.clustering import kmeans_core
+from sklearn.metrics import silhouette_score
 
 def plot_cluster_probabilities_ci(
     cluster_probs_ci,
@@ -170,4 +171,53 @@ def plot_usage_probabilities_paper(
         plt.close(fig)
     else:
         plt.show()
+
+
+def plot_elbow_silhouette(
+    features,
+    k_range=range(2, 8),
+):
+    features_valid = features.filter(pl.col("valid") == True)
+
+    inertia = []
+    sil_scores = []
+
+    for k in k_range:
+        labels, km, X_scaled = kmeans_core(
+            features_valid,
+            k,
+            return_model=True,
+            return_X=True,
+        )
+
+        inertia.append(km.inertia_)
+        sil_scores.append(silhouette_score(X_scaled, labels))
+
+    fig, ax1 = plt.subplots(figsize=(6, 4))
+
+    l1, = ax1.plot(
+        k_range,
+        inertia,
+        marker="o",
+        color="tab:blue",
+        label="Inertia (WCSS)",
+    )
+    ax1.set_xlabel("Number of clusters k")
+    ax1.set_ylabel("Inertia")
+
+    ax2 = ax1.twinx()
+    l2, = ax2.plot(
+        k_range,
+        sil_scores,
+        marker="o",
+        color="tab:orange",
+        label="Silhouette score",
+    )
+    ax2.set_ylabel("Silhouette score")
+
+    ax1.legend([l1, l2], [l1.get_label(), l2.get_label()])
+    ax1.set_title("Elbow method and silhouette analysis")
+
+    fig.tight_layout()
+    plt.show()
 

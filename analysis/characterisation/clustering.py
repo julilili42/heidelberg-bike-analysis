@@ -12,18 +12,20 @@ from analysis.characterisation.helpers import wilson_ci
 
 dl = DataLoader()
 
-def kmeans_core(features_valid, k):
-    features = features_valid.drop(["station", "valid"]).to_numpy()
+def kmeans_core(features_valid, k, return_model=False, return_X=False):
+    X = features_valid.drop(["station", "valid"]).to_numpy()
 
     scaler = StandardScaler()
-    features_scaled = scaler.fit_transform(features)
-    
+    X_scaled = scaler.fit_transform(X)
+
     km = KMeans(n_clusters=k, random_state=0, n_init=20)
+    labels = km.fit_predict(X_scaled)
 
-    labels = km.fit_predict(features_scaled)
-
+    if return_model and return_X:
+        return labels, km, X_scaled
+    if return_model:
+        return labels, km
     return labels, km.cluster_centers_
-
 
 
 def kmeans_clustering(features, k):
