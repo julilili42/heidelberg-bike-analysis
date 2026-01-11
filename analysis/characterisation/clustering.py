@@ -75,7 +75,7 @@ def cluster_timeseries_usage(loader, k, start, end, mode, window_months, feature
             continue
         
         start_month_interval = interval[0]
-        end_month_interval = interval[0]
+        end_month_interval = interval[1]
 
         print(f"Perform Clustering in Interval {start_month_interval} until {end_month_interval}")
 
