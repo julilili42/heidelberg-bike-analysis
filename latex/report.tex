@@ -295,7 +295,8 @@ with lower scores labeled as \emph{recreational}, intermediate as \emph{mixed}, 
 \todo{This must be better defended. Why is this a good way?}
 
 \subsection*{Weather and Event Class Definitions}
-For the event-based analysis, days were grouped into three classes based on temperature and precipitation (Table~\ref{tab:weather_classes}).
+For the event-based analysis, days were grouped into three classes based on temperature and precipitation using data-driven quantile thresholds (Table~\ref{tab:weather_classes}).
+
 
 Low-condition days ($L$) serve as baseline, and relative changes in mean daily bicycle counts for class $X \in \{M,H\}$ are computed as
 \[
@@ -313,12 +314,20 @@ Class &
 $T_{\max}$ [$^\circ$C] &
 $P_{\text{day}}$ [mm] \\
 \midrule
-$L$ & $< 10$        & $= 0$ \\
-$M$ & $[10,\,20)$   & $(0,\,5]$ \\
-$H$ & $\ge 20$      & $> 5$ \\
+$L$ & $< q_{33}$ & $= 0$ \\
+$M$ & $[q_{33},\,q_{66})$ & $(0,\,q_{80}]$ \\
+$H$ & $\ge q_{66}$ & $> q_{80}$ \\
 \bottomrule
 \end{tabular}
+
+\vspace{3pt}
+{\footnotesize
+Empirical thresholds: $q_{33}=10.7^\circ$C, $q_{66}=19.8^\circ$C (temperature),
+$q_{80}=7.1$ mm (precipitation).
+}
 \end{table}
+
+
 
 
 \section{Results}\label{sec:results}
@@ -377,19 +386,20 @@ We first examine the effects of weather conditions, followed by the impact of pu
  & $L$ & $\Delta_M$ & $\Delta_H$ \\
 \midrule
 Mix
-& 1447 & 31\% & 72\%
-& 948  & 49\% & 116\% \\
+& 1383 & 21\% & 70\%
+& 887  & 27\% & 116\% \\
 
 Rec
-& 1034 & 17\% & 36\%
-& 801  & 26\% & 59\% \\
+& 1009 & 7\%  & 36\%
+& 754  & 16\% & 64\% \\
 
 Util
-& 3543 & 18\% & 43\%
-& 2525 & 26\% & 65\% \\
+& 3424 & 11\% & 39\%
+& 2368 & 17\% & 61\% \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
 
 Bicycle traffic increases with rising temperatures across all usage types (Table~\ref{tab:temperature_effect}).
 Mixed stations exhibit the strongest temperature sensitivity, particularly on weekends, while utilitarian and recreational stations show more moderate responses.
@@ -421,6 +431,7 @@ Util
 \bottomrule
 \end{tabularx}
 \end{table}
+
 
 Precipitation consistently reduces bicycle traffic across all usage types (Table~\ref{tab:precipitation_effect}).
 The strongest declines occur at mixed stations, especially on weekends, whereas utilitarian and recreational stations are less affected.
