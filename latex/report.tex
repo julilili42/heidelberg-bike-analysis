@@ -68,8 +68,8 @@
 % if you use cleveref..
 \usepackage[capitalize,noabbrev]{cleveref}
 
-% \usepackage[textsize=tiny]{todonotes}
-\usepackage[disable]{todonotes}
+\usepackage[textsize=tiny]{todonotes}
+%\usepackage[disable]{todonotes}
 
 
 % The \icmltitle you define below is probably too long as a header.
@@ -123,7 +123,7 @@
 As cycling becomes key in sustainable urban mobility, understanding spatiotemporal traffic patterns is essential for infrastructure planning. 
 While previous studies have classified bicycle traffic, they often rely on predefined, rule-based approaches that may fail to capture hybrid usage behaviors. 
 Addressing this limitation, we present a data-driven approach to classify urban bicycle traffic using hourly data from counting stations in Heidelberg, Germany. 
-We derive special features to quantify the shape of traffic patterns across various timescales. 
+We derive features to quantify the shape of traffic patterns across various timescales. 
 Subsequent $k$-means distinguishes distinct usage patterns: \emph{utilitarian}, \emph{recreational}, and \emph{mixed}.
 Finally, we investigate the influence of external factors, such as weather and public holidays, which varies significantly across different usage types. \footnote{Source files are publicly available in the \href{https://github.com/julilili42/datalit}{\textcolor{TUred}{project repository}}.}
 
@@ -138,8 +138,8 @@ Finally, we investigate the influence of external factors, such as weather and p
 %\end{itemize}
 
 \section{Introduction}\label{sec:intro}
-Sustainable urban traffic relies heavily on the expansion of cycling. 
-Both the state of Baden-Württemberg and the city of Heidelberg explicitly promote cycling as part of their long-term mobility strategies \cite{bw2016_radstrategie, heidelberg_radstrategie_2030}.
+
+Sustainable urban traffic relies heavily on the expansion of cycling, which is explicitly promoted by both the state of Baden-Württemberg and the city of Heidelberg as part of their long-term mobility strategies \cite{bw2016_radstrategie, heidelberg_radstrategie_2030}. 
 To translate these strategies into infrastructure, planners require a good understanding of traffic behavior. Specifically, they need to know not just how many people are cycling, but when and why.
 
 
@@ -219,22 +219,25 @@ Previous works often rely on predefined rules to categorize bicycle traffic \cit
 We propose a more data-driven, implicit approach. By extracting features that quantify the 'shape' of daily, weekly, and seasonal profiles,
 we map each station into a multi-dimensional feature space. This allows us to use unsupervised k-means clustering \citep{kmeans} to discover different usage types. 
 
-In a subsequent step in chapter \ref{sec:results}, we assign one of the following labels to each cluster:
+In a subsequent step, cluster semantics are assigned post hoc, resulting in the following usage types:
 \begin{itemize}[noitemsep, topsep=1pt]
-    \item \emph{Utilitarian}: Traffic showing strong commuting patterns, with two distinct peaks in traffic volume during the morning and afternoon hours.
-    \item \emph{Recreational}: Traffic dominated by leisure activities. These locations exhibit a single peak in traffic volume around midday or early afternoon.
-    \item \emph{Mixed}: Dual-purpose locations exhibiting both utilitarian and recreational characteristics.
+    \item \emph{Utilitarian (Util)}: Traffic showing strong commuting patterns, with two distinct peaks in traffic volume during the morning and afternoon hours.
+    \item \emph{Recreational (Rec)}: Traffic dominated by leisure activities. These locations exhibit a single peak in traffic volume around midday or early afternoon.
+    \item \emph{Mixed (Mix)}: Dual-purpose locations exhibiting both utilitarian and recreational characteristics.
 \end{itemize}
+
 % Why k = 3?
-The number of clusters was fixed to $k=3$ to explicitly reflect these three usage types.
-Silhouette analysis supports a dominant separation between extreme types, while the third cluster captures intermediate behavior.
+The number of clusters was fixed to $k=3$ to reflect the conceptual distinction between utilitarian, recreational, and mixed usage.
+Elbow and silhouette analyses indicate a dominant separation between two extreme patterns, while $k=3$ introduces a stable intermediate cluster with only a minor loss in geometric separation.
 
 % k-Means Features
-To characterise the counting stations, we derive three distinct features that capture traffic patterns across different timescales: daily, weekly and seasonal
-to exploit the distinct pattern visible in Figure xyz \todo{Figure pattern}.
+We represent station usage using three interpretable features capturing intra-day patterns, weekday–weekend differences, and seasonal variability. 
+Features are derived from normalised hourly, daily, and monthly traffic indices \cite{american_bike_patterns}, and are conceptually aligned with the indicators used therein. 
+The resulting feature space is low-dimensional, volume-invariant, and preserves temporal structure.
+Feature relevance was assessed using correlation analysis, PCA, and permutation-based importance measures.
 
-\todo{Explaination why these features were choosen?}
-\todo{Why is symmetry and distance used in DPI?}
+
+
 % DPI
 \paragraph{Double Peak Index (DPI)}
 Weekday hourly profiles of some stations exhibit a double-peak structure, typically associated with morning and evening commuting.
@@ -278,7 +281,7 @@ the SDI is defined as
 \end{align*}
 High values indicate strong seasonal variation, whereas low values correspond to relatively stable, year-round usage.
 
-\subsection*{Temporal Clustering}\label{sec:clustering}
+\subsection*{Temporal Clustering}\label{sec:temporal_clustering}
 To account for temporal variability in bicycle traffic, $k$-means clustering is performed on sliding two-year windows with monthly shifts. Feature vectors are recomputed separately for each window.
 
 For each station $s$ and usage type $u$, the empirical cluster membership probability is defined as
@@ -287,21 +290,23 @@ P(u \mid s) = \frac{1}{N_s} \sum_{i=1}^{N_s} \mathbb{I}\bigl( c_i(s) = u \bigr),
 \]
 where $c_i(s)$ denotes the cluster assignment in the $i$-th run and $N_s$ the number of valid runs.
 
-Since $k$-means produces unlabeled partitions, cluster semantics are assigned post hoc by ordering clusters according to a centroid-level \emph{utilitarian score}
+Since $k$-means produces unlabeled partitions, cluster semantics are assigned post hoc by ordering clusters using a centroid-level \emph{utilitarian score}
 \[
-\text{DPI} + \text{WSD} - \text{SDI},
+\text{DPI} + \text{WSD} - \text{SDI}.
 \]
-with lower scores labeled as \emph{recreational}, intermediate as \emph{mixed}, and higher as \emph{utilitarian}.
-\todo{This must be better defended. Why is this a good way?}
+Prior work characterises utilitarian stations by pronounced weekday commuting peaks, strong weekday–weekend contrast, and comparatively weak seasonality \cite{american_bike_patterns}.
+Clusters with higher scores are labeled \emph{utilitarian}, intermediate scores as \emph{mixed}, and lower scores as \emph{recreational}.
+
 
 \subsection*{Weather and Event Class Definitions}
 For the event-based analysis, days were grouped into three classes based on temperature and precipitation using data-driven quantile thresholds (Table~\ref{tab:weather_classes}).
-
+Here, quantiles are computed over the empirical city-wide distribution of daily weather observations and serve solely to define comparable event classes.
 
 Low-condition days ($L$) serve as baseline, and relative changes in mean daily bicycle counts for class $X \in \{M,H\}$ are computed as
 \[
-\Delta_X = \frac{\bar{C}_X - \bar{C}_L}{\bar{C}_L} \times 100,
+\Delta_X = \frac{\bar{C}_X - \bar{C}_L}{\bar{C}_L} \times 100.
 \]
+
 
 \begin{table}[t]
 \centering
@@ -334,7 +339,7 @@ $q_{80}=7.1$ mm (precipitation).
 This section presents the results of the proposed clustering approach and analyzes the spatial distribution of station usage types as well as their sensitivity to external factors.
 \subsection{Station Usage Types and Spatial Structure}\label{sec:results_clustering}
 Figure~\ref{fig:clustering_prob} presents the probabilistic usage type assignments. 
-Cluster labels correspond to the usage types defined in Section~\ref{sec:clustering} and are assigned based on the centroid-level utilitarian score.
+Cluster labels correspond to the usage types defined in Section~\ref{sec:methods} and are assigned based on the centroid-level utilitarian score.
 Some stations show near-deterministic assignments with low entropy (e.g., S1–S3), while others exhibit more balanced probabilities, indicating temporally variable usage.
 
 \begin{figure}[t]
@@ -458,7 +463,6 @@ Util  & 3238 & 2043 & $-42.8\%$ \\
 \bottomrule
 \end{tabularx}
 \end{table}
-\todo{Maybe calc delta of different holidays}
 
 Public holidays substantially reduce bicycle traffic across all usage types (Table~\ref{tab:holiday_effect}).
 Reductions are strongest at recreational and utilitarian stations, while mixed stations are less affected.
