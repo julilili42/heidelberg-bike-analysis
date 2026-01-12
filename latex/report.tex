@@ -154,11 +154,8 @@ Precipitation, temperature, and public holidays can influence traffic patterns \
 Since commuters are more weather-resilient than leisure riders, these effects vary by usage type \cite{heinen2011_day_to_day_bicycle}. 
 Therefore, we aim to understand how these factors influence the demand profiles of different usage types in the city of Heidelberg, Germany.
 
-
-To overcome the limitations of rule-based classification, we present a flexible, data-driven approach. 
-Using hourly counting data from 15 stations in Heidelberg (Figure~\ref{fig:station_map}), we first derive features to quantify traffic shapes across daily, weekly, and seasonal timescales.
-We then apply $k$-means clustering to identify different usage patterns (\emph{utilitarian}, \emph{recreational}, and \emph{mixed})
-and analyze their sensitivity to weather and public holidays.
+To overcome the limitations of rule-based classification, we present a flexible, data-driven approach.
+Using hourly counting data from 15 stations in Heidelberg (Figure~\ref{fig:station_map}), we identify distinct usage patterns and analyze their sensitivity to external factors.
 
 \section{Data}\label{sec:data}
 The analysis is based on bicycle traffic counts complemented by weather and public holiday data.
@@ -232,7 +229,7 @@ Elbow and silhouette analyses indicate a dominant separation between two extreme
 
 % k-Means Features
 We represent station usage using three interpretable features capturing intra-day patterns, weekday–weekend differences, and seasonal variability. 
-Features are derived from normalised hourly, daily, and monthly traffic indices \cite{american_bike_patterns}, and are conceptually aligned with the indicators used therein. 
+Features are derived from station-level normalised hourly, daily, and monthly traffic indices $(I_h, I_w, I_m)$ \cite{american_bike_patterns}, and are conceptually aligned with the indicators used therein.
 The resulting feature space is low-dimensional, volume-invariant, and preserves temporal structure.
 Feature relevance was assessed using correlation analysis, PCA, and permutation-based importance measures.
 
@@ -240,46 +237,51 @@ Feature relevance was assessed using correlation analysis, PCA, and permutation-
 
 % DPI
 \paragraph{Double Peak Index (DPI)}
-Weekday hourly profiles of some stations exhibit a double-peak structure, typically associated with morning and evening commuting.
-The DPI quantifies this behaviour by identifying dominant morning (5–10 h) and evening (14–20 h) peaks and relating their magnitudes to the average midday level (8–14 h). 
-Stations with clear, balanced commuting peaks yield high DPI values, whereas flat or single-peak profiles result in low scores.
+Weekday hourly profiles at utilitarian stations often exhibit pronounced commuting peaks.
+The Double Peak Index (DPI) quantifies this pattern by comparing the dominant morning (5–10 h) and late-day (14–20 h) peaks to the average midday level (8–14 h).
+
+Let $p_m$ and $p_e$ denote the magnitudes of the morning and late-day peaks at hours $h_m$ and $h_e$, and let $m$ be the average midday level.
+The DPI is defined as
+\begin{align*}
+\mathrm{DPI} = \max\!\left( S \cdot Y \cdot D,\, 0 \right),
+\end{align*}
+where
+\begin{align*}
+S &= \tfrac{(p_m - m) + (p_e - m)}{2}, \\
+Y &= 1 - \tfrac{|p_m - p_e|}{\max(p_m, p_e)}, \\
+D &= \min\!\left(\tfrac{|h_e - h_m|}{10},\, 1\right)
+\end{align*}
+capture peak strength, symmetry, and temporal separation, respectively.
 
 
-Formally, let $p_m$ and $p_e$ denote the magnitudes of the morning and evening peaks at hours $h_m$ and $h_e$, and let $m$ be the average midday traffic level. The DPI is defined as
-\begin{align*}
-    \text{DPI} &= \max\!\left( S \cdot Y \cdot D,\, 0 \right)
-\end{align*}
-where $S$, $Y$ and $D$ models strength, symmetry and distance, respectively:
-\begin{align*}
-        S &= \frac{(p_m - m) + (p_e - m)}{2} \\
-    Y &= 1 - \frac{|p_m - p_e|}{\max(p_m, p_e)} \\
-    D &= \min\!\left(\frac{|h_e - h_m|}{10},\, 1\right)
-\end{align*}
 % WSD
-\paragraph{Weekend Shape Difference (WSD)} 
-Differences between weekday and weekend hourly traffic patterns provide an additional discriminator between usage types. To capture this effect, we compare the shape of the weekday and weekend hourly profiles.
-Let $\mathbf{p}^{wd}$ and $\mathbf{p}^{we}$ denote the weekday and weekend hourly profiles, normalised to sum to one.
+\paragraph{Weekend Shape Difference (WSD)}
+Differences between weekday and weekend hourly profiles provide an additional discriminator between usage types.
+Let $\mathbf{p}^{wd}$ and $\mathbf{p}^{we}$ denote the weekday and weekend hourly profiles, normalised to unit sum.
+The Weekend Shape Difference (WSD) is defined as
 \begin{align*}
-\text{WSD} =
+\mathrm{WSD} =
 \left\lVert
-\frac{\mathbf{p}^{wd}}{\sum_h p^{wd}_h}
+\mathbf{p}^{wd}
 -
-\frac{\mathbf{p}^{we}}{\sum_h p^{we}_h}
-\right\rVert_2
+\mathbf{p}^{we}
+\right\rVert_2 .
 \end{align*}
+
 % SDI
 \paragraph{Seasonal Drop Index (SDI)}
-Finally, we consider long-term patterns. Seasonality provides a discriminator between leisure and utilitarian-oriented stations. The SDI quantifies the relative decline between high and low-usage months.
-Let $I_m$ denote the monthly index values of a station. Using upper and lower quantiles to ensure robustness against outliers
+Seasonality provides an additional discriminator between recreational and utilitarian stations.
+We quantify long-term variability using the Seasonal Drop Index (SDI), defined from the monthly index $I_m$.
+Robust upper and lower quantiles are given by
 \begin{align*}
-q_{90} &= \text{quantile}_{0.9}(I_m) \\
-q_{10} &= \text{quantile}_{0.1}(I_m)
+q_{90} &= \mathrm{quantile}_{0.9}(I_m), &
+q_{10} &= \mathrm{quantile}_{0.1}(I_m),
 \end{align*}
-the SDI is defined as
+and the SDI is defined as
 \begin{align*}
-\text{SDI} &= \frac{q_{90} - q_{10}}{q_{90}}
+\mathrm{SDI} = \frac{q_{90} - q_{10}}{q_{90}} .
 \end{align*}
-High values indicate strong seasonal variation, whereas low values correspond to relatively stable, year-round usage.
+
 
 \subsection*{Temporal Clustering}\label{sec:temporal_clustering}
 To account for temporal variability in bicycle traffic, $k$-means clustering is performed on sliding two-year windows with monthly shifts. Feature vectors are recomputed separately for each window.
