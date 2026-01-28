@@ -11,7 +11,7 @@
 \usepackage{comment}
 \usepackage{tabularx}
 \usepackage{enumitem} % fix distance in itemize
-
+\usepackage{bbm} % for better indicator function
 
 \usepackage{tikz}
 % Corporate Design of the University of Tübingen
@@ -288,7 +288,7 @@ To account for temporal variability in bicycle traffic, $k$-means clustering is 
 
 For each station $s$ and usage type $u$, the empirical cluster membership probability is defined as
 \[
-P(u \mid s) = \frac{1}{N_s} \sum_{i=1}^{N_s} \mathbb{I}\bigl( c_i(s) = u \bigr),
+P(u \mid s) = \frac{1}{N_s} \sum_{i=1}^{N_s} \mathbbm{1}\bigl( c_i(s) = u \bigr),
 \]
 where $c_i(s)$ denotes the cluster assignment in the $i$-th run and $N_s$ the number of valid runs.
 

@@ -1,6 +1,5 @@
 # Usage Patterns of Bicycle Counting Stations in Heidelberg and the Influence of External Factors
 
-Abstract:
 As cycling becomes key in sustainable urban mobility, understanding spatiotemporal traffic patterns is essential for infrastructure planning. While previous studies have classified bicycle traffic, they often rely on predefined, rule-based approaches that may fail to capture hybrid usage behaviors. Addressing this limitation, we present a data-driven approach to classify urban bicycle traffic using hourly data from counting stations in Heidelberg, Germany. We derive features to quantify the shape of traffic patterns across various timescales. Subsequent k-means distinguishes distinct usage patterns: utilitarian, recreational, and mixed. Finally, we investigate the influence of external factors, such as weather and public holidays, which varies significantly across different usage types.
 
 ## For Reviewers
