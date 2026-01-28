@@ -208,9 +208,7 @@ Locally recorded weather data from the counting stations were excluded due to in
 
 
 \subsection{Holiday Data}
-Public holidays and school vacation periods for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien}.
-\todo{Data quality: Add measures that had to be taken to clean up dataset}
-
+Public holidays and school vacation periods for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien}. The data was filtered to match the observation period of the counting stations. Days classified as public holidays were treated as non-working days in the subsequent analysis, regardless of whether they fell on a weekend.
 \section{Method}\label{sec:methods}
 Previous works often rely on predefined rules to categorize bicycle traffic \citep{american_bike_patterns}. However, such an approach may fail to capture hybrid usage patterns.
 We propose a more data-driven, implicit approach. By extracting features that quantify the 'shape' of daily, weekly, and seasonal profiles,
