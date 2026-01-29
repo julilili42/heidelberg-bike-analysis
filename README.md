@@ -7,6 +7,21 @@ As cycling becomes key in sustainable urban mobility, understanding spatiotempor
 - `analysis/exploration`: this code is not used for the final report, but contains analysis tools to visualize and get a better understanding of the data.
 - `analysis/sanity`: this code contains sanity checks.
 
+To improve orientation, we link all paths were the figures and tables used in the paper are created:
+
+### Tables:
+- [Table 1 - Overview Stations](analysis/sanity/sanity_tables.ipynb)
+- [Table 3 - Effect Temperature](analysis/characterisation/notebooks/07_weather_impact.ipynb)
+- [Table 4 - Effect Precipitation](analysis/characterisation/notebooks/07_weather_impact.ipynb)
+- [Table 5 - Effect Holidays](analysis/characterisation/notebooks/06_holiday_impact.ipynb)
+
+
+### Figures:
+- [Figure 1 - Probabilistic Assignment](analysis/characterisation/notebooks/04_probabalistic_clustering.ipynb)
+- [Figure 2 - Map of Stations](analysis/characterisation/notebooks/05_map.ipynb)
+- [Figure 3 - Holiday Changes](analysis/characterisation/notebooks/06_holiday_impact.ipynb)
+
+
 > **Important**  
 > To run the code, it is recommended to use Visual Studio Code, as the base paths for the notebooks have been changed (see `.vscode/`). But before you run any code, setup the python environment and fetch the data as described below.
 
