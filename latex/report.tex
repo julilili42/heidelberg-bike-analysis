@@ -125,7 +125,7 @@ While previous studies have classified bicycle traffic, they often rely on prede
 Addressing this limitation, we present a data-driven approach to classify urban bicycle traffic using hourly data from counting stations in Heidelberg, Germany. 
 We derive features to quantify the shape of traffic patterns across various timescales. 
 Subsequent $k$-means distinguishes distinct usage patterns: \emph{utilitarian}, \emph{recreational}, and \emph{mixed}.
-Finally, we investigate the influence of external factors, such as weather and public holidays, which varies significantly across different usage types. \footnote{Source files are publicly available in the \href{https://github.com/julilili42/datalit}{\textcolor{TUred}{project repository}}.}
+Finally, we investigate the influence of external factors, such as weather and public holidays, which varies substantially across different usage types. \footnote{Source files are publicly available in the \href{https://github.com/julilili42/heidelberg-bike-analysis}{\textcolor{TUred}{project repository}}.}
 
 
 \end{abstract}
@@ -139,36 +139,30 @@ Finally, we investigate the influence of external factors, such as weather and p
 
 \section{Introduction}\label{sec:intro}
 
-Sustainable urban traffic relies heavily on the expansion of cycling, which is explicitly promoted by both the state of Baden-Württemberg and the city of Heidelberg as part of their long-term mobility strategies \cite{bw2016_radstrategie, heidelberg_radstrategie_2030}. 
-To translate these strategies into infrastructure, planners require a good understanding of traffic behavior. Specifically, they need to know not just how many people are cycling, but when and why.
+Sustainable urban traffic relies heavily on the expansion of cycling, which is explicitly promoted by the city of Heidelberg as part of their long-term mobility strategies \cite{heidelberg_radstrategie_2030}. 
+To translate these strategies into infrastructure, planners require an understanding of when and why people cycle, not just how many.
 
-
-Trip purposes are typically inferred from spatiotemporal traffic patterns. 
-While previous studies have successfully used hourly and daily counts to distinguish utilitarian from recreational traffic, 
-they often rely on rule-based approaches \cite{american_bike_patterns}. 
-These methods, however, struggle to capture hybrid usage patterns common in urban environments.
-
+Trip purpose is commonly inferred from spatiotemporal bicycle counts; however, existing rule-based approaches struggle to capture hybrid usage patterns \cite{american_bike_patterns}.
 
 Furthermore, cycling demand is highly sensitive to external factors.
 Precipitation, temperature, and public holidays can influence traffic patterns \cite{liu2015_weather_mode_choice_sweden, rudloff2014_weather_transport_vienna, cools2007_holidays_traffic}. 
 Since commuters are more weather-resilient than leisure riders, these effects vary by usage type \cite{heinen2011_day_to_day_bicycle}. 
-Therefore, we aim to understand how these factors influence the demand profiles of different usage types in the city of Heidelberg, Germany.
 
-To overcome the limitations of rule-based classification, we present a flexible, data-driven approach.
-Using hourly counting data from 15 stations in Heidelberg (Figure~\ref{fig:station_map}), we identify distinct usage patterns and analyze their sensitivity to external factors.
+To address these questions, we analyze hourly bicycle counts from 15 stations in Heidelberg (Figure~\ref{fig:station_map}) using a data-driven approach.
+
+Our contributions are threefold:
+(i) an interpretable station representation based on established temporal traffic indices and their combination across time scales;
+(ii) unsupervised clustering to distinguish utilitarian, recreational, and mixed usage patterns;
+(iii) a usage-type–specific analysis of weather and public holiday effects.
 
 \section{Data}\label{sec:data}
-The analysis is based on bicycle traffic counts complemented by weather and public holiday data.
-In the following, we describe the data sources, preprocessing steps, and quality checks.
-
 \subsection{Bicycle Counting Data}
 The bicycle counting stations in Heidelberg are densely and centrally distributed across the urban area. For our analysis, hourly bicycle counts from 15 permanent monitoring stations installed between May 2014 and January 2020 were used.
-To ensure consistent temporal coverage for the probabilistic clustering, we restricted the analysis to the period from January 1, 2016, to January 1, 2025.
 The stations provide hourly bicycle counts using inductive loop sensors \cite{ecocounter_zelt}.
 The data are publicly available via the MobiData BW open data platform \cite{mobidatabw_api}.
 
-Data quality was assessed by marking days with fewer than 12 hourly observations as missing and flagging zero-count days at high-traffic stations (median $>$ 500 cyclists/day) as sensor failures.
-Table~\ref{tab:station_quality} summarizes data availability and basic traffic statistics for all 15 stations (S1–S15), reporting mean daily counts and day-to-day variability (Std).
+Data quality was assessed by marking incomplete days and potential sensor failures.
+Table~\ref{tab:station_quality} summarizes data availability and basic traffic statistics.
 
 \begin{table}[t]
 \centering
@@ -205,10 +199,9 @@ Hourly weather data were obtained from the Open-Meteo API \cite{open_meteo_api}.
 As all stations lie within a single grid cell, a city-wide hourly weather time series was used for all stations.
 Locally recorded weather data from the counting stations were excluded due to inconsistencies with official weather data.
 
-
-
 \subsection{Holiday Data}
-Public holidays and school vacation periods for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien}. The data was filtered to match the observation period of the counting stations. Days classified as public holidays were treated as non-working days in the subsequent analysis, regardless of whether they fell on a weekend.
+Public holidays and school vacation periods for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien}. 
+
 \section{Method}\label{sec:methods}
 Previous works often rely on predefined rules to categorize bicycle traffic \citep{american_bike_patterns}. However, such an approach may fail to capture hybrid usage patterns.
 We propose a more data-driven, implicit approach. By extracting features that quantify the 'shape' of daily, weekly, and seasonal profiles,
@@ -223,13 +216,14 @@ In a subsequent step, cluster semantics are assigned post hoc, resulting in the 
 
 % Why k = 3?
 The number of clusters was fixed to $k=3$ to reflect the conceptual distinction between utilitarian, recreational, and mixed usage.
-Elbow and silhouette analyses indicate a dominant separation between two extreme patterns, while $k=3$ introduces a stable intermediate cluster with only a minor loss in geometric separation.
+Although the maximum silhouette score is achieved at $k=2$ ($0.49$), 
+$k=3$ introduces an additional stable cluster (silhouette $0.41$) while preserving a clear elbow in the inertia curve.
 
 % k-Means Features
 We represent station usage using three interpretable features capturing intra-day patterns, weekday–weekend differences, and seasonal variability. 
 Features are derived from station-level normalised hourly, daily, and monthly traffic indices $(I_h, I_w, I_m)$ \cite{american_bike_patterns}, and are conceptually aligned with the indicators used therein.
 The resulting feature space is low-dimensional, volume-invariant, and preserves temporal structure.
-Feature relevance was assessed using correlation analysis, PCA, and permutation-based importance measures.
+Feature relationships were explored using correlation analysis and PCA as sanity checks.
 
 
 
@@ -290,13 +284,18 @@ P(u \mid s) = \frac{1}{N_s} \sum_{i=1}^{N_s} \mathbbm{1}\bigl( c_i(s) = u \bigr)
 \]
 where $c_i(s)$ denotes the cluster assignment in the $i$-th run and $N_s$ the number of valid runs.
 
+
+
 Since $k$-means produces unlabeled partitions, cluster semantics are assigned post hoc by ordering clusters using a centroid-level \emph{utilitarian score}
 \[
 \text{DPI} + \text{WSD} - \text{SDI}.
 \]
 Prior work characterises utilitarian stations by pronounced weekday commuting peaks, strong weekday–weekend contrast, and comparatively weak seasonality \cite{american_bike_patterns}.
-Clusters with higher scores are labeled \emph{utilitarian}, intermediate scores as \emph{mixed}, and lower scores as \emph{recreational}.
-
+Clusters with higher scores are labeled
+\emph{utilitarian}, intermediate scores as \emph{mixed}, and lower scores as \emph{recreational}.
+As centroid ordering is performed in the same feature space used for clustering, these labels
+should be interpreted as descriptive summaries of the clusters rather than as an
+independent external validation.
 
 \subsection*{Weather and Event Class Definitions}
 For the event-based analysis, days were grouped into three classes based on temperature and precipitation using data-driven quantile thresholds (Table~\ref{tab:weather_classes}).
@@ -307,10 +306,9 @@ Low-condition days ($L$) serve as baseline, and relative changes in mean daily b
 \Delta_X = \frac{\bar{C}_X - \bar{C}_L}{\bar{C}_L} \times 100.
 \]
 
-
 \begin{table}[t]
 \centering
-\caption{Weather class definitions for the event-based analysis.}
+\caption{Independent temperature and precipitation class definitions.}
 \label{tab:weather_classes}
 \small
 \begin{tabular}{c cc}
@@ -325,8 +323,9 @@ $H$ & $\ge q_{66}$ & $> q_{80}$ \\
 \bottomrule
 \end{tabular}
 
-\vspace{3pt}
+\vspace{2pt}
 {\footnotesize
+Classes are defined independently for temperature and precipitation and applied only to the respective analysis.
 Empirical thresholds: $q_{33}=10.7^\circ$C, $q_{66}=19.8^\circ$C (temperature),
 $q_{80}=7.1$ mm (precipitation).
 }
@@ -485,11 +484,11 @@ Together, these results highlight that external factors affect not only traffic 
 %    \item describe weather impact, obvious PLOT: weather
 %\end{itemize}
 
-
 \section{Conclusion}\label{sec:conclusion}
 This analysis identified distinct bicycle usage patterns across stations in Heidelberg and showed that their spatial distribution and sensitivity to external factors differ systematically.
 Utilitarian, recreational, and mixed stations respond differently to weather and public holidays, reflecting underlying trip purposes.
 Overall, the results highlight that urban bicycle demand cannot be captured by traffic volume alone, but requires consideration of temporal usage patterns and contextual influences.
+The findings should be interpreted in light of several limitations: the analysis is restricted to 15 stations within a single city, and directional flow information was not considered due to incomplete availability across stations.
 
 
 \section*{Contribution Statement}

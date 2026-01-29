@@ -192,6 +192,7 @@ def plot_elbow_silhouette(
 
         inertia.append(km.inertia_)
         sil_scores.append(silhouette_score(X_scaled, labels))
+    
 
     fig, ax1 = plt.subplots(figsize=(6, 4))
 
