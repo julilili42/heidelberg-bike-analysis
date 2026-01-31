@@ -150,10 +150,7 @@ Since commuters are more weather-resilient than leisure riders, these effects va
 
 To address these questions, we analyze hourly bicycle counts from 15 stations in Heidelberg (Figure~\ref{fig:station_map}) using a data-driven approach.
 
-Our contributions are threefold:
-(i) an interpretable station representation based on established temporal traffic indices and their combination across time scales;
-(ii) unsupervised clustering to distinguish utilitarian, recreational, and mixed usage patterns;
-(iii) a usage-type–specific analysis of weather and public holiday effects.
+In this work, we (i) develop an interpretable representation of station usage based on established temporal traffic indices, (ii) identify distinct usage patterns (utilitarian, recreational, and mixed) using unsupervised clustering, and (iii) analyze how weather and public holidays affect these usage types.
 
 \section{Data}\label{sec:data}
 \subsection{Bicycle Counting Data}
@@ -161,8 +158,7 @@ The bicycle counting stations in Heidelberg are densely and centrally distribute
 The stations provide hourly bicycle counts using inductive loop sensors \cite{ecocounter_zelt}.
 The data are publicly available via the MobiData BW open data platform \cite{mobidatabw_api}.
 
-Data quality was assessed by marking incomplete days and potential sensor failures.
-Table~\ref{tab:station_quality} summarizes data availability and basic traffic statistics.
+Data quality was assessed by counting missing hourly data points. Station failures always resulted in extended periods of missing data rather than continuous zero values. Table~\ref{tab:station_quality} summarizes data availability and basic traffic statistics.
 
 \begin{table}[t]
 \centering
@@ -200,12 +196,12 @@ As all stations lie within a single grid cell, a city-wide hourly weather time s
 Locally recorded weather data from the counting stations were excluded due to inconsistencies with official weather data.
 
 \subsection{Holiday Data}
-Public holidays and school vacation periods for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien}. 
+Public holidays for Baden-Württemberg were obtained from the Mehr Schulferien API \cite{mehr_schulferien}. 
 
 \section{Method}\label{sec:methods}
 Previous works often rely on predefined rules to categorize bicycle traffic \citep{american_bike_patterns}. However, such an approach may fail to capture hybrid usage patterns.
-We propose a more data-driven, implicit approach. By extracting features that quantify the 'shape' of daily, weekly, and seasonal profiles,
-we map each station into a multi-dimensional feature space. This allows us to use unsupervised k-means clustering \citep{kmeans} to discover different usage types. 
+We propose a more data-driven, implicit approach. By extracting features that quantify the shape of daily, weekly, and seasonal profiles,
+we map each station into a low-dimensional feature space. This allows us to use unsupervised k-means clustering \citep{kmeans} to discover different usage types. 
 
 In a subsequent step, cluster semantics are assigned post hoc, resulting in the following usage types:
 \begin{itemize}[noitemsep, topsep=1pt]
@@ -221,7 +217,7 @@ $k=3$ introduces an additional stable cluster (silhouette $0.41$) while preservi
 
 % k-Means Features
 We represent station usage using three interpretable features capturing intra-day patterns, weekday–weekend differences, and seasonal variability. 
-Features are derived from station-level normalised hourly, daily, and monthly traffic indices $(I_h, I_w, I_m)$ \cite{american_bike_patterns}, and are conceptually aligned with the indicators used therein.
+Features are derived from station-level normalised hourly, daily, and monthly traffic indices $I_h, I_w, I_m$ \cite{american_bike_patterns}, and are conceptually aligned with the indicators used therein.
 The resulting feature space is low-dimensional, volume-invariant, and preserves temporal structure.
 Feature relationships were explored using correlation analysis and PCA as sanity checks.
 
