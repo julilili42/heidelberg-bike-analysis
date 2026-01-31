@@ -218,7 +218,6 @@ $k=3$ introduces an additional stable cluster (silhouette $0.41$) while preservi
 % k-Means Features
 We represent station usage using three interpretable features capturing intra-day patterns, weekday–weekend differences, and seasonal variability. 
 Features are derived from station-level normalised hourly, daily, and monthly traffic indices $I_h, I_w, I_m$ \cite{american_bike_patterns}, and are conceptually aligned with the indicators used therein.
-The resulting feature space is low-dimensional, volume-invariant, and preserves temporal structure.
 Feature relationships were explored using correlation analysis and PCA as sanity checks.
 
 
@@ -322,7 +321,7 @@ $H$ & $\ge q_{66}$ & $> q_{80}$ \\
 \vspace{2pt}
 {\footnotesize
 Classes are defined independently for temperature and precipitation and applied only to the respective analysis.
-Empirical thresholds: $q_{33}=10.7^\circ$C, $q_{66}=19.8^\circ$C (temperature),
+Empirical quantile thresholds: $q_{33}=10.7^\circ$C, $q_{66}=19.8^\circ$C (temperature),
 $q_{80}=7.1$ mm (precipitation).
 }
 \end{table}
