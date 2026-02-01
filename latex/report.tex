@@ -1,4 +1,3 @@
-%%%%%%%% DATA LITERACY 2025 LATEX PROJECT TEMPLATE FILE %%%%%%%%%%%%%%%%%
 %%% Based on the 2025 ICML template, available at https://icml.cc/Conferences/2025/AuthorInstructions %%%
 
 \documentclass{article}
@@ -217,7 +216,7 @@ $k=3$ introduces an additional stable cluster (silhouette $0.41$) while preservi
 
 % k-Means Features
 We represent station usage using three interpretable features capturing intra-day patterns, weekday–weekend differences, and seasonal variability. 
-Features are derived from station-level normalised hourly, daily, and monthly traffic indices $I_h, I_w, I_m$ \cite{american_bike_patterns}, and are conceptually aligned with the indicators used therein.
+Features are derived from station-level normalised hourly, daily, and monthly traffic indices $I_h, I_w, I_m$ \cite{american_bike_patterns}, and are conceptually aligned with the indicators used therein. The feature design is motivated by typical bicycle traffic patterns (see Figure~\ref{fig:patterns}). 
 Feature relationships were explored using correlation analysis and PCA as sanity checks.
 
 
@@ -303,7 +302,7 @@ Low-condition days ($L$) serve as baseline, and relative changes in mean daily b
 
 \begin{table}[t]
 \centering
-\caption{Independent temperature and precipitation class definitions.}
+\caption{Temperature and precipitation classes, defined independently and applied only to the respective analysis.}
 \label{tab:weather_classes}
 \small
 \begin{tabular}{c cc}
@@ -320,9 +319,8 @@ $H$ & $\ge q_{66}$ & $> q_{80}$ \\
 
 \vspace{2pt}
 {\footnotesize
-Classes are defined independently for temperature and precipitation and applied only to the respective analysis.
-Empirical quantile thresholds: $q_{33}=10.7^\circ$C, $q_{66}=19.8^\circ$C (temperature),
-$q_{80}=7.1$ mm (precipitation).
+Empirical quantile thresholds for temperature and precipitation:
+$q_{33}=10.7^\circ$C, $q_{66}=19.8^\circ$C, $q_{80}=7.1$ mm.
 }
 \end{table}
 
@@ -330,7 +328,6 @@ $q_{80}=7.1$ mm (precipitation).
 
 
 \section{Results}\label{sec:results}
-This section presents the results of the proposed clustering approach and analyzes the spatial distribution of station usage types as well as their sensitivity to external factors.
 \subsection{Station Usage Types and Spatial Structure}\label{sec:results_clustering}
 Figure~\ref{fig:clustering_prob} presents the probabilistic usage type assignments. 
 Cluster labels correspond to the usage types defined in Section~\ref{sec:methods} and are assigned based on the centroid-level utilitarian score.
@@ -343,14 +340,13 @@ Some stations show near-deterministic assignments with low entropy (e.g., S1–S
     \label{fig:clustering_prob}
 \end{figure}
 
-In the following analysis, each station is assigned its dominant usage type, defined as the class with the highest assignment probability. 
+In the following analysis, each station is assigned to its dominant usage type, defined as the class with the highest assignment probability. 
 Figure~\ref{fig:station_map} visualizes the spatial distribution of stations by dominant usage type.
 
 \begin{figure}[t]
     \centering
     \caption{
-    Spatial distribution of bicycle counting stations in Heidelberg. 
-    Marker color and shape indicate the dominant usage type. Marker size reflects the assignment probability of the dominant class.}
+    Spatial distribution of bicycle counting stations. Marker color and shape indicate the dominant usage type. Marker size reflects the assignment probability of the dominant class.}
     \includegraphics[width=\columnwidth]{img/station_usage_map.png}
     \label{fig:station_map}
 \end{figure}
@@ -397,6 +393,11 @@ Util
 & 2368 & 17\% & 61\% \\
 \bottomrule
 \end{tabularx}
+
+\vspace{2pt}
+{\footnotesize
+L values are the daily mean of bicyclists per usage-type.
+}
 \end{table}
 
 
@@ -429,6 +430,11 @@ Util
 & 3823 & $-13$\% & $-29$\% \\
 \bottomrule
 \end{tabularx}
+
+\vspace{2pt}
+{\footnotesize
+L values are the daily mean of bicyclists per usage-type.
+}
 \end{table}
 
 
@@ -456,6 +462,11 @@ Rec & 1260 &  728 & $-42.2\%$ \\
 Util  & 3238 & 2043 & $-42.8\%$ \\
 \bottomrule
 \end{tabularx}
+
+\vspace{2pt}
+{\footnotesize
+Values show the daily mean of bicyclists per usage-type.
+}
 \end{table}
 
 Public holidays substantially reduce bicycle traffic across all usage types (Table~\ref{tab:holiday_effect}).
@@ -472,30 +483,23 @@ Beyond volume effects, holidays also weaken weekday commuting peaks and shift us
 Together, these results highlight that external factors affect not only traffic volume but also temporal usage structure in a type-specific manner.
 
 
-%\begin{itemize}
-%    \item describe temporal shift, describe why this is expected and why, PLOT: city,
-%    \item describe holidays impact, describe behaviour (similar as weekend) PLOT: show shift
-%    \item include also plot of different public holidays (my own one), this is just to have a funny fact (Vater Tag) PLOT: funny plot, na werden zu viele plots
-%    \item describe weather impact, obvious PLOT: weather
-%\end{itemize}
-
 \section{Conclusion}\label{sec:conclusion}
 This analysis identified distinct bicycle usage patterns across stations in Heidelberg and showed that their spatial distribution and sensitivity to external factors differ systematically.
 Utilitarian, recreational, and mixed stations respond differently to weather and public holidays, reflecting underlying trip purposes.
 Overall, the results highlight that urban bicycle demand cannot be captured by traffic volume alone, but requires consideration of temporal usage patterns and contextual influences.
 The findings should be interpreted in light of several limitations: the analysis is restricted to 15 stations within a single city, and directional flow information was not considered due to incomplete availability across stations.
 
+\begin{figure}[!htbp]
+    \centering
+    \caption{Typical hourly traffic patterns by station type on weekdays and weekends. Adapted from \cite{american_bike_patterns}.}
+    \includegraphics[width=\columnwidth]{img/figure_patterns.png}
+    \label{fig:patterns}
+\end{figure}
+
 \clearpage
 
 \section*{Contribution Statement}
 Simon Rappenecker and Martin Eichler were responsible for the acquisition and preprocessing of the bicycle counting and weather datasets. Julian Jurcevic and Tarik Eker developed the feature engineering framework. All authors contributed equally to the interpretation of the results and the final drafting of this report.
-%\begin{itemize}
-%    \item summarize
-%    \item limitations
-%    \item problems
-%    \item statements that can be made
-%\end{itemize}
-
 % Footnote
 %\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
 \printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
