@@ -287,9 +287,8 @@ Since $k$-means produces unlabeled partitions, cluster semantics are assigned po
 Prior work characterises utilitarian stations by pronounced weekday commuting peaks, strong weekday–weekend contrast, and comparatively weak seasonality \cite{american_bike_patterns}.
 Clusters with higher scores are labeled
 \emph{utilitarian}, intermediate scores as \emph{mixed}, and lower scores as \emph{recreational}.
-As centroid ordering is performed in the same feature space used for clustering, these labels
-should be interpreted as descriptive summaries of the clusters rather than as an
-independent external validation.
+As centroid ordering relies on the same feature space as clustering, the labels provide descriptive characterisations rather than external validation.
+
 
 \subsection*{Weather and Event Class Definitions}
 For the event-based analysis, days were grouped into three classes based on temperature and precipitation using data-driven quantile thresholds (Table~\ref{tab:weather_classes}).
@@ -487,7 +486,12 @@ Together, these results highlight that external factors affect not only traffic 
 This analysis identified distinct bicycle usage patterns across stations in Heidelberg and showed that their spatial distribution and sensitivity to external factors differ systematically.
 Utilitarian, recreational, and mixed stations respond differently to weather and public holidays, reflecting underlying trip purposes.
 Overall, the results highlight that urban bicycle demand cannot be captured by traffic volume alone, but requires consideration of temporal usage patterns and contextual influences.
-The findings should be interpreted in light of several limitations: the analysis is restricted to 15 stations within a single city, and directional flow information was not considered due to incomplete availability across stations.
+The findings should be interpreted in light of several limitations:
+(i) the analysis is limited to 15 stations within a single city,
+(ii) directional flow information is not considered,
+(iii) usage types are inferred from temporal patterns rather than ground-truth trip purposes,
+and (iv) the choice of $k$ and features favors interpretability over clustering optimality.
+
 
 \begin{figure}[!htbp]
     \centering
